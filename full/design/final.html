@@ -1,0 +1,1266 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TPASS 通勤月票 — 找出你每個月能省多少</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+/* ─────────────────────────────────────────
+   DESIGN TOKENS  (DESIGN.md + CLAUDE.md)
+───────────────────────────────────────── */
+:root {
+  --bg:           #ffffff;
+  --bg-subtle:    #f5f5f5;
+  --bg-elevated:  #fafafa;
+  --ink:          #2b2b2b;
+  --ink-2:        #5c5c5c;
+  --muted:        #9a9a9a;
+  --accent:       #3cb371;
+  --accent-dk:    #2a9459;
+  --accent-lt:    #e8f5ee;
+  --line:         #e8e8e8;
+
+  --fd: 'Plus Jakarta Sans', 'Noto Sans TC', sans-serif;
+  --fb: 'Noto Sans TC', 'Plus Jakarta Sans', sans-serif;
+
+  --r-sm: 4px;
+  --r-md: 8px;
+  --r-lg: 12px;
+  --r-xl: 16px;
+
+  --nav-h: 64px;
+  --content-w: 1200px;
+}
+
+/* ─── Reset ─── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--fb);
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 16px;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: inherit; text-decoration: none; }
+button { font-family: var(--fb); cursor: pointer; border: none; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: var(--r-sm); }
+
+
+/* ─────────────────────────────────────────
+   NAV
+───────────────────────────────────────── */
+.nav {
+  position: sticky; top: 0; z-index: 100;
+  height: var(--nav-h);
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 40px;
+}
+.nav-logo {
+  font-family: var(--fd);
+  font-weight: 800;
+  font-size: 1.125rem;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+.nav-logo .g { color: var(--accent); }
+.nav-links {
+  display: flex; gap: 28px; list-style: none;
+}
+.nav-links a {
+  font-size: 0.875rem;
+  color: var(--ink-2);
+  transition: color 0.15s;
+}
+.nav-links a:hover { color: var(--ink); }
+.nav-upgrade {
+  font-family: var(--fd);
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 8px 18px;
+  border-radius: var(--r-md);
+  background: var(--accent-lt);
+  color: var(--accent-dk);
+  border: 1.5px solid transparent;
+  transition: background 0.15s, border-color 0.15s;
+}
+.nav-upgrade:hover { background: #d4eede; border-color: #b8d9c7; }
+.nav-menu { display: none; background: none; border: none; color: var(--ink-2); font-size: 1.25rem; padding: 6px; }
+
+
+/* ─────────────────────────────────────────
+   HERO  (2-column, centred, max 1200px)
+───────────────────────────────────────── */
+.hero-wrap {
+  max-width: var(--content-w);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 480px;
+  min-height: calc(100vh - var(--nav-h));
+  border-left: 1px solid var(--line);
+  border-right: 1px solid var(--line);
+}
+
+/* Left: value prop */
+.hero-left {
+  padding: clamp(48px, 9vh, 88px) 56px 56px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  border-right: 1px solid var(--line);
+}
+.eyebrow {
+  font-family: var(--fd);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 20px;
+}
+.hero-h1 {
+  font-family: var(--fd);
+  font-size: clamp(2.5rem, 4vw, 3.25rem);
+  font-weight: 800;
+  line-height: 1.04;
+  letter-spacing: -0.025em;
+  color: var(--ink);
+  margin-bottom: 22px;
+}
+.hero-h1 em { font-style: normal; color: var(--accent); }
+.hero-desc {
+  font-size: 1.0625rem;
+  color: var(--ink-2);
+  line-height: 1.7;
+  max-width: 440px;
+  margin-bottom: 48px;
+}
+.trust-stats {
+  display: flex; gap: 32px;
+  padding-top: 36px;
+  border-top: 1px solid var(--line);
+}
+.ts { display: flex; flex-direction: column; gap: 3px; }
+.ts-num {
+  font-family: var(--fd);
+  font-size: 1.625rem;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--ink);
+}
+.ts-label { font-size: 0.8125rem; color: var(--muted); line-height: 1.4; }
+
+/* Right: Wizard panel */
+.wizard-panel {
+  background: var(--bg-subtle);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+/* Wizard header */
+.wiz-header {
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+  padding: 24px 32px 0;
+}
+.wiz-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+.wiz-title {
+  font-family: var(--fd);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+/* M1: escape hatch */
+.wiz-skip {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--muted);
+  transition: color 0.15s;
+  white-space: nowrap;
+}
+.wiz-skip:hover { color: var(--ink-2); }
+
+/* Step tabs */
+.step-tabs { display: flex; list-style: none; }
+.step-tab {
+  flex: 1;
+  padding: 9px 0 12px;
+  font-family: var(--fd);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--muted);
+  border-bottom: 2px solid transparent;
+  text-align: center;
+  pointer-events: none;
+  cursor: default;
+  transition: color 0.15s, border-color 0.15s;
+}
+.step-tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 700; }
+.step-tab.done   { color: var(--ink-2); border-bottom-color: var(--line); }
+
+/* Wizard body */
+.wiz-body { padding: 32px; flex: 1; overflow-y: auto; min-height: 0; }
+.wiz-step { display: none; }
+.wiz-step.active { display: block; }
+.wiz-q {
+  font-family: var(--fd);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 6px;
+  line-height: 1.25;
+}
+.wiz-hint { font-size: 0.875rem; color: var(--muted); margin-bottom: 26px; line-height: 1.55; }
+
+/* Form controls */
+.fg { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+.fg-label { font-family: var(--fd); font-size: 0.875rem; font-weight: 600; color: var(--ink); }
+.fg-hint  { font-size: 0.8125rem; color: var(--muted); }
+.fg-input, .fg-select {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid var(--line);
+  border-radius: var(--r-md);
+  font-family: var(--fb);
+  font-size: 0.9375rem;
+  color: var(--ink);
+  background: var(--bg);
+  outline: none;
+  transition: border-color 0.15s;
+  appearance: none;
+}
+.fg-input:focus, .fg-select:focus { border-color: var(--accent); }
+.fg-input::placeholder { color: var(--muted); }
+.fg-select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239a9a9a' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 38px;
+  cursor: pointer;
+}
+.form-row { display: grid; grid-template-columns: 1fr 24px 1fr; gap: 8px; align-items: end; }
+.form-arrow { display: flex; align-items: flex-end; padding-bottom: 13px; justify-content: center; color: var(--muted); font-size: 1rem; }
+
+/* Radio cards */
+.radio-group { display: flex; flex-direction: column; gap: 9px; }
+.radio-card {
+  display: flex; align-items: center; gap: 13px;
+  padding: 13px 16px;
+  border: 1.5px solid var(--line);
+  border-radius: var(--r-md);
+  cursor: pointer;
+  background: var(--bg);
+  transition: border-color 0.15s, background 0.15s;
+}
+.radio-card:hover { border-color: #b8d9c7; background: #fbfdfb; }
+.radio-card.selected { border-color: var(--accent); background: var(--accent-lt); }
+.radio-card input[type="radio"] { accent-color: var(--accent); width: 16px; height: 16px; flex-shrink: 0; }
+.rc-label { font-family: var(--fd); font-size: 0.9375rem; font-weight: 600; color: var(--ink); line-height: 1.3; }
+.rc-sub   { font-size: 0.8125rem; color: var(--muted); margin-top: 1px; }
+.radio-card.selected .rc-label { color: var(--accent-dk); }
+
+/* Step 3 — result card */
+.result-card {
+  border: 2px solid var(--accent);
+  border-radius: var(--r-xl);
+  overflow: hidden;
+  background: var(--bg);
+}
+.rc-head {
+  background: var(--accent);
+  padding: 15px 22px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.rc-head-text { font-family: var(--fd); font-weight: 700; font-size: 0.9375rem; color: #fff; }
+.rc-badge {
+  background: rgba(255,255,255,0.22);
+  color: #fff;
+  padding: 3px 10px;
+  border-radius: 100px;
+  font-family: var(--fd);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.rc-body { padding: 22px; }
+
+/* callout: 1.0 vs 2.0 explanation */
+.rc-callout {
+  background: var(--accent-lt);
+  border-radius: var(--r-md);
+  padding: 10px 14px;
+  margin-bottom: 18px;
+  font-size: 0.8125rem;
+  color: var(--accent-dk);
+  line-height: 1.55;
+}
+
+/* savings */
+.savings-row { display: flex; align-items: baseline; gap: 7px; margin-bottom: 3px; }
+.savings-amt {
+  font-family: var(--fd);
+  font-size: 3.5rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--accent);
+  line-height: 1;
+}
+.savings-unit { font-family: var(--fd); font-size: 1.125rem; font-weight: 600; color: var(--accent); }
+.savings-route { font-size: 0.8125rem; color: var(--muted); margin-bottom: 18px; line-height: 1.5; }
+
+.rc-divider { height: 1px; background: var(--line); margin: 16px 0; }
+
+/* detail grid */
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 7px 16px;
+  font-size: 0.875rem;
+  margin-bottom: 14px;
+}
+.dl { color: var(--ink-2); }
+.dv { font-family: var(--fd); font-weight: 600; color: var(--ink); text-align: right; }
+.dl.hi { color: var(--accent-dk); font-weight: 600; }
+.dv.hi { color: var(--accent-dk); font-weight: 800; }
+
+/* M2: why not 2.0 */
+.why-not {
+  font-size: 0.8125rem;
+  color: var(--muted);
+  margin-bottom: 16px;
+  line-height: 1.55;
+  padding-top: 4px;
+}
+
+.btn-apply {
+  width: 100%;
+  padding: 14px;
+  border-radius: var(--r-md);
+  background: var(--accent);
+  color: #fff;
+  font-family: var(--fd);
+  font-size: 1rem;
+  font-weight: 700;
+  transition: background 0.15s;
+  margin-bottom: 10px;
+}
+.btn-apply:hover { background: var(--accent-dk); }
+.rc-note { font-size: 0.75rem; color: var(--muted); text-align: center; line-height: 1.55; margin-bottom: 14px; }
+.rc-links {
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+  font-size: 0.8125rem;
+  color: var(--ink-2);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  align-items: center;
+}
+.rc-links a { color: var(--accent); font-weight: 600; }
+.rc-links .sep { color: var(--line); }
+
+/* Wizard footer */
+.wiz-footer {
+  padding: 18px 32px;
+  border-top: 1px solid var(--line);
+  background: var(--bg);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+}
+.btn-back {
+  font-family: var(--fd);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  padding: 11px 22px;
+  border-radius: var(--r-md);
+  background: transparent;
+  color: var(--ink-2);
+  border: 1.5px solid var(--line);
+  transition: background 0.15s;
+}
+.btn-back:hover { background: var(--bg-subtle); }
+.btn-next {
+  font-family: var(--fd);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  padding: 11px 28px;
+  border-radius: var(--r-md);
+  background: var(--accent);
+  color: #fff;
+  transition: background 0.15s;
+}
+.btn-next:hover { background: var(--accent-dk); }
+.btn-next:disabled { opacity: 0.38; cursor: not-allowed; }
+
+
+/* ─────────────────────────────────────────
+   TRUST STRIP
+───────────────────────────────────────── */
+.trust-strip {
+  max-width: var(--content-w);
+  margin: 0 auto;
+  padding: 28px 40px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-left: 1px solid var(--line);
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+.ti {
+  display: flex; align-items: flex-start; gap: 14px;
+  padding: 0 28px 0 0;
+}
+.ti + .ti { padding-left: 28px; border-left: 1px solid var(--line); }
+.ti-icon {
+  width: 38px; height: 38px; flex-shrink: 0;
+  background: var(--accent-lt);
+  border-radius: var(--r-md);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 17px;
+  color: var(--accent-dk);
+  line-height: 1;
+}
+.ti-text { font-size: 0.875rem; color: var(--ink-2); line-height: 1.55; }
+.ti-text strong { display: block; font-family: var(--fd); font-weight: 700; color: var(--ink); font-size: 0.9375rem; margin-bottom: 1px; }
+
+
+/* ─────────────────────────────────────────
+   SHARED SECTION CHROME
+───────────────────────────────────────── */
+.section-inner {
+  max-width: var(--content-w);
+  margin: 0 auto;
+  padding: 80px 40px;
+}
+.sec-eyebrow {
+  font-family: var(--fd);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 14px;
+}
+.sec-h2 {
+  font-family: var(--fd);
+  font-size: 2.25rem;
+  font-weight: 800;
+  letter-spacing: -0.015em;
+  line-height: 1.1;
+  color: var(--ink);
+  margin-bottom: 56px;
+}
+
+
+/* ─────────────────────────────────────────
+   HOW IT WORKS
+───────────────────────────────────────── */
+.how-section { border-bottom: 1px solid var(--line); }
+.how-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 40px; }
+.how-step {}
+.how-num {
+  font-family: var(--fd);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 14px;
+  padding-bottom: 14px;
+  border-bottom: 2px solid var(--accent-lt);
+  display: flex; align-items: center; gap: 10px;
+}
+.how-num::before {
+  content: attr(data-n);
+  width: 26px; height: 26px;
+  background: var(--accent);
+  color: #fff;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.6875rem;
+  font-weight: 800;
+  flex-shrink: 0;
+  font-family: var(--fd);
+}
+.how-step h3 {
+  font-family: var(--fd);
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 8px;
+}
+.how-step p { font-size: 0.9375rem; color: var(--ink-2); line-height: 1.7; }
+
+
+/* ─────────────────────────────────────────
+   PLAN COMPARISON  (#plans)
+───────────────────────────────────────── */
+.plans-section { border-bottom: 1px solid var(--line); }
+.plans-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.plan-card {
+  border: 1.5px solid var(--line);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+}
+.plan-card.recommended { border-color: var(--accent); }
+.plan-head {
+  padding: 18px 22px;
+  background: var(--bg-subtle);
+  border-bottom: 1px solid var(--line);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.plan-card.recommended .plan-head { background: var(--accent-lt); border-color: var(--accent); }
+.plan-name { font-family: var(--fd); font-weight: 700; font-size: 1rem; color: var(--ink); }
+.plan-badge {
+  font-family: var(--fd);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  border-radius: 100px;
+}
+.badge-green { background: var(--accent-lt); color: var(--accent-dk); }
+.badge-gray  { background: var(--bg-subtle); color: var(--muted); border: 1px solid var(--line); }
+.plan-body { padding: 22px; }
+.plan-price {
+  font-family: var(--fd);
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--ink);
+  margin-bottom: 4px;
+}
+.plan-price span { font-size: 0.9rem; font-weight: 400; color: var(--muted); }
+.plan-target { font-size: 0.875rem; color: var(--muted); margin-bottom: 18px; }
+.plan-feat { display: flex; align-items: flex-start; gap: 9px; font-size: 0.875rem; color: var(--ink-2); margin-top: 9px; line-height: 1.5; }
+.feat-yes { color: var(--accent); font-weight: 700; flex-shrink: 0; }
+.feat-no  { color: var(--line); font-weight: 700; flex-shrink: 0; }
+.plan-cta {
+  margin-top: 20px;
+  width: 100%; padding: 12px;
+  border-radius: var(--r-md);
+  font-family: var(--fd);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  transition: background 0.15s, border-color 0.15s;
+}
+.cta-primary { background: var(--accent); color: #fff; border: 1.5px solid var(--accent); }
+.cta-primary:hover { background: var(--accent-dk); border-color: var(--accent-dk); }
+.cta-ghost { background: transparent; color: var(--ink-2); border: 1.5px solid var(--line); }
+.cta-ghost:hover { background: var(--bg-subtle); }
+
+
+/* ─────────────────────────────────────────
+   UPGRADE SECTION  (#upgrade) — M4
+───────────────────────────────────────── */
+.upgrade-section {
+  background: var(--ink);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.upgrade-inner {
+  max-width: var(--content-w);
+  margin: 0 auto;
+  padding: 80px 40px;
+}
+.upgrade-inner .sec-eyebrow { color: rgba(255,255,255,0.4); }
+.upgrade-inner .sec-h2 { color: #fff; margin-bottom: 40px; }
+.upgrade-grid { display: grid; grid-template-columns: 1fr 400px; gap: 64px; align-items: start; }
+.upgrade-left {}
+.upgrade-promise {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: var(--r-lg);
+  padding: 20px 22px;
+  margin-bottom: 28px;
+  display: flex; align-items: flex-start; gap: 14px;
+}
+.up-check {
+  width: 28px; height: 28px; flex-shrink: 0;
+  background: var(--accent);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.875rem;
+  margin-top: 1px;
+}
+.up-text { font-size: 0.9375rem; color: rgba(255,255,255,0.75); line-height: 1.65; }
+.up-text strong { display: block; color: #fff; font-family: var(--fd); font-weight: 700; margin-bottom: 2px; }
+
+.upgrade-right {}
+.upgrade-calc {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+}
+.uc-head {
+  background: rgba(255,255,255,0.08);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  padding: 16px 22px;
+  font-family: var(--fd);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: rgba(255,255,255,0.7);
+}
+.uc-body { padding: 22px; }
+.uc-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px 16px;
+  font-size: 0.875rem;
+  margin-bottom: 16px;
+}
+.uc-label { color: rgba(255,255,255,0.55); }
+.uc-val { font-family: var(--fd); font-weight: 600; color: rgba(255,255,255,0.85); text-align: right; }
+.uc-divider { height: 1px; background: rgba(255,255,255,0.1); margin: 14px 0; }
+.uc-diff-label { color: rgba(255,255,255,0.55); font-size: 0.875rem; }
+.uc-diff-val { font-family: var(--fd); font-weight: 800; font-size: 1.25rem; color: var(--accent); text-align: right; }
+.uc-note { font-size: 0.75rem; color: rgba(255,255,255,0.3); line-height: 1.55; margin-top: 14px; }
+.btn-upgrade {
+  width: 100%;
+  margin-top: 18px;
+  padding: 13px;
+  border-radius: var(--r-md);
+  background: var(--accent);
+  color: #fff;
+  font-family: var(--fd);
+  font-size: 1rem;
+  font-weight: 700;
+  transition: background 0.15s;
+}
+.btn-upgrade:hover { background: var(--accent-dk); }
+
+
+/* ─────────────────────────────────────────
+   QUOTES
+───────────────────────────────────────── */
+.quotes-section {
+  background: var(--bg-subtle);
+  border-bottom: 1px solid var(--line);
+}
+.quotes-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 18px; }
+.q-card {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: 22px;
+}
+.q-text {
+  font-size: 0.9375rem;
+  color: var(--ink-2);
+  line-height: 1.7;
+  margin-bottom: 18px;
+  font-style: italic;
+}
+.q-text::before {
+  content: '\201C';
+  color: var(--accent);
+  font-family: var(--fd);
+  font-size: 1.5rem;
+  font-weight: 800;
+  font-style: normal;
+  line-height: 0;
+  vertical-align: -0.25em;
+  margin-right: 1px;
+}
+.q-meta { display: flex; align-items: center; gap: 11px; }
+.q-av {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  background: var(--accent-lt);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--fd); font-weight: 700; font-size: 0.75rem;
+  color: var(--accent-dk);
+  flex-shrink: 0;
+}
+.q-info { font-size: 0.8125rem; color: var(--muted); line-height: 1.5; }
+.q-info strong { display: block; color: var(--ink-2); font-weight: 600; }
+
+
+/* ─────────────────────────────────────────
+   CTA BAND
+───────────────────────────────────────── */
+.cta-band {
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+}
+.cta-inner {
+  max-width: var(--content-w);
+  margin: 0 auto;
+  padding: 72px 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 48px;
+}
+.cta-left h2 {
+  font-family: var(--fd);
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.015em;
+  line-height: 1.1;
+  color: var(--ink);
+  margin-bottom: 10px;
+}
+.cta-left p { font-size: 1rem; color: var(--ink-2); line-height: 1.65; max-width: 480px; }
+.btn-cta {
+  flex-shrink: 0;
+  font-family: var(--fd);
+  font-size: 1rem;
+  font-weight: 700;
+  padding: 16px 40px;
+  border-radius: var(--r-md);
+  background: var(--accent);
+  color: #fff;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+.btn-cta:hover { background: var(--accent-dk); }
+
+
+/* ─────────────────────────────────────────
+   FOOTER
+───────────────────────────────────────── */
+footer {
+  background: var(--bg);
+  padding: 36px 40px;
+}
+.footer-inner {
+  max-width: var(--content-w);
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.footer-logo { font-family: var(--fd); font-weight: 800; font-size: 1rem; color: var(--ink); }
+.footer-logo .g { color: var(--accent); }
+.footer-links { display: flex; gap: 24px; flex-wrap: wrap; }
+.footer-links a { font-size: 0.875rem; color: var(--muted); transition: color 0.15s; }
+.footer-links a:hover { color: var(--ink-2); }
+.footer-copy { font-size: 0.8125rem; color: var(--muted); }
+
+
+/* ─────────────────────────────────────────
+   RESPONSIVE
+───────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .nav { padding: 0 24px; }
+  .nav-links { display: none; }
+  .nav-menu { display: flex; }
+  .hero-wrap { grid-template-columns: 1fr; min-height: auto; border-left: none; border-right: none; }
+  .hero-left { padding: 48px 32px 36px; border-right: none; border-bottom: 1px solid var(--line); }
+  .wizard-panel { min-height: 520px; }
+  .trust-strip { grid-template-columns: 1fr; gap: 0; padding: 0; border-left: none; border-right: none; }
+  .ti { padding: 22px 32px; }
+  .ti + .ti { border-left: none; border-top: 1px solid var(--line); }
+  .how-grid, .plans-grid, .quotes-grid { grid-template-columns: 1fr; }
+  .upgrade-grid { grid-template-columns: 1fr; gap: 32px; }
+  .cta-inner { flex-direction: column; align-items: flex-start; gap: 28px; }
+  .section-inner { padding: 64px 32px; }
+  .upgrade-inner { padding: 64px 32px; }
+  .sec-h2 { margin-bottom: 40px; }
+}
+
+@media (max-width: 640px) {
+  .nav { padding: 0 20px; }
+  .nav-upgrade { font-size: 0.8125rem; padding: 7px 12px; }
+  .hero-left { padding: 36px 20px 28px; }
+  .hero-h1 { font-size: 2rem; }
+  .trust-stats { flex-direction: column; gap: 18px; }
+  .ts-num { font-size: 1.375rem; }
+  .wiz-body { padding: 24px 20px; }
+  .wiz-header { padding: 20px 20px 0; }
+  .wiz-footer { padding: 16px 20px; }
+  .form-row { grid-template-columns: 1fr; }
+  .form-arrow { display: none; }
+  .savings-amt { font-size: 2.75rem; }
+  .section-inner { padding: 48px 20px; }
+  .upgrade-inner { padding: 48px 20px; }
+  .sec-h2 { font-size: 1.75rem; margin-bottom: 32px; }
+  .footer-inner { flex-direction: column; text-align: center; }
+  .footer-links { justify-content: center; }
+  .cta-inner { padding: 48px 20px; }
+  .cta-left h2 { font-size: 1.625rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── NAV ── -->
+<header>
+  <nav class="nav" role="navigation" aria-label="主選單">
+    <a href="#" class="nav-logo" aria-label="TPASS 首頁">T<span class="g">PASS</span></a>
+    <ul class="nav-links">
+      <li><a href="#how">如何運作</a></li>
+      <li><a href="#plans">方案比較</a></li>
+      <li><a href="#upgrade">1.0 升級</a></li>
+      <li><a href="#faq">常見問題</a></li>
+    </ul>
+    <div style="display:flex;align-items:center;gap:12px">
+      <!-- M4: nav button → real #upgrade destination -->
+      <a href="#upgrade" class="nav-upgrade">已有 1.0，查升級</a>
+      <button class="nav-menu" aria-label="開啟選單">☰</button>
+    </div>
+  </nav>
+</header>
+
+<main>
+
+<!-- ── HERO ── -->
+<section class="hero-wrap" aria-label="方案試算">
+
+  <!-- Left: value prop -->
+  <div class="hero-left">
+    <p class="eyebrow">通勤月票方案試算</p>
+    <h1 class="hero-h1">你每個月<br>可以省<em>多少</em>？</h1>
+    <p class="hero-desc">輸入你的通勤路線，30 秒得到你的專屬試算結果。不需要先搞懂 1.0 和 2.0 的差別——我們告訴你答案。</p>
+    <div class="trust-stats" role="list" aria-label="服務數據">
+      <div class="ts" role="listitem">
+        <span class="ts-num">$342</span>
+        <span class="ts-label">竹北→新竹台鐵通勤<br>每月平均省下</span>
+      </div>
+      <div class="ts" role="listitem">
+        <span class="ts-num">87 萬</span>
+        <span class="ts-label">現有持卡用戶</span>
+      </div>
+      <div class="ts" role="listitem">
+        <span class="ts-num">97%</span>
+        <span class="ts-label">辦了繼續在用</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: Wizard -->
+  <aside class="wizard-panel" aria-label="方案試算精靈">
+
+    <div class="wiz-header">
+      <div class="wiz-header-row">
+        <span class="wiz-title">找出適合你的方案</span>
+        <!-- M1: escape hatch -->
+        <a href="#plans" class="wiz-skip">直接比較 1.0 / 2.0 →</a>
+      </div>
+      <ol class="step-tabs" aria-label="試算步驟">
+        <li class="step-tab done"   id="tab-1" aria-current="false">1 路線</li>
+        <li class="step-tab active" id="tab-2" aria-current="step">2 頻率</li>
+        <li class="step-tab"        id="tab-3" aria-current="false">3 結果</li>
+      </ol>
+    </div>
+
+    <div class="wiz-body">
+
+      <!-- Step 1: Route -->
+      <div class="wiz-step" id="step-1" role="group" aria-labelledby="q1">
+        <p class="wiz-q" id="q1">你的通勤起訖站是哪裡？</p>
+        <p class="wiz-hint">輸入你每天的起點和終點就好，轉乘站不用填。</p>
+        <div class="form-row">
+          <div class="fg">
+            <label class="fg-label" for="from">出發站</label>
+            <input class="fg-input" id="from" type="text" placeholder="例：竹北站" autocomplete="off">
+          </div>
+          <div class="form-arrow" aria-hidden="true">→</div>
+          <div class="fg">
+            <label class="fg-label" for="to">到達站</label>
+            <input class="fg-input" id="to" type="text" placeholder="例：新竹站" autocomplete="off">
+          </div>
+        </div>
+        <div class="fg">
+          <label class="fg-label" for="transport">主要搭乘交通工具</label>
+          <select class="fg-select" id="transport">
+            <option value="">請選擇</option>
+            <option value="metro">台北捷運</option>
+            <option value="tra">台鐵</option>
+            <option value="bus">市區公車</option>
+            <option value="mixed">捷運 + 公車</option>
+            <option value="other">其他</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Step 2: Frequency -->
+      <div class="wiz-step active" id="step-2" role="group" aria-labelledby="q2">
+        <p class="wiz-q" id="q2">你平均每週搭幾天？</p>
+        <p class="wiz-hint">不確定的話，選最接近的就好。上下班來回都算一天。</p>
+        <div class="radio-group" role="radiogroup" aria-labelledby="q2">
+          <label class="radio-card selected">
+            <input type="radio" name="days" value="5" checked>
+            <div><div class="rc-label">5 天（週一至週五）</div><div class="rc-sub">標準通勤族</div></div>
+          </label>
+          <label class="radio-card">
+            <input type="radio" name="days" value="4">
+            <div><div class="rc-label">3–4 天</div><div class="rc-sub">部分遠端、彈性工作</div></div>
+          </label>
+          <label class="radio-card">
+            <input type="radio" name="days" value="2">
+            <div><div class="rc-label">1–2 天</div><div class="rc-sub">偶爾進辦公室</div></div>
+          </label>
+          <label class="radio-card">
+            <input type="radio" name="days" value="1">
+            <div><div class="rc-label">不固定</div><div class="rc-sub">每週差很多，按需搭乘</div></div>
+          </label>
+        </div>
+      </div>
+
+      <!-- Step 3: Result -->
+      <div class="wiz-step" id="step-3" role="region" aria-labelledby="result-h">
+        <div class="result-card">
+          <div class="rc-head">
+            <span class="rc-head-text" id="result-h">你的試算結果</span>
+            <span class="rc-badge">推薦 1.0</span>
+          </div>
+          <div class="rc-body">
+            <!-- callout: 1.0 vs 2.0 (保留 + 加強) -->
+            <div class="rc-callout">
+              1.0 = 台北都會區月票 $799&nbsp;·&nbsp;2.0 = 跨縣市月票 $1,200<br>
+              你的路線在 1.0 涵蓋範圍內，用 1.0 就夠。
+            </div>
+
+            <div class="savings-row" aria-label="每月省下金額">
+              <span class="savings-amt">$342</span>
+              <span class="savings-unit">元 / 月</span>
+            </div>
+            <p class="savings-route">竹北站 → 新竹站，每週 5 天 · 等於每年省 $4,104</p>
+
+            <div class="rc-divider" role="separator"></div>
+
+            <div class="detail-grid" aria-label="費用明細">
+              <span class="dl">目前每月交通費（估）</span><span class="dv">$1,141</span>
+              <span class="dl">TPASS 1.0 月費</span><span class="dv">$799</span>
+              <span class="dl hi">每月節省</span><span class="dv hi">$342</span>
+            </div>
+
+            <!-- M2: 推薦邏輯說明 -->
+            <p class="why-not">為什麼不是 2.0？升 2.0 費用增加 $401，但你的路線在 1.0 範圍內，節省金額不變。</p>
+
+            <button class="btn-apply" type="button">立即申辦 TPASS 1.0 →</button>
+            <p class="rc-note">試算以系統平均票價估算，實際金額依搭乘次數略有差異。資料更新：2026-05-01</p>
+
+            <!-- M3: 了解 1.0 連結 -->
+            <div class="rc-links">
+              已有 1.0？<a href="#upgrade">查看升級 2.0 差距 →</a>
+              <span class="sep">|</span>
+              <a href="#plans" style="color:var(--ink-2)">了解 1.0 完整說明</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /wiz-body -->
+
+    <div class="wiz-footer">
+      <!-- M5: back button hidden on step 1 via JS; present but invisible -->
+      <button class="btn-back" id="btn-back" type="button" aria-label="返回上一步">
+        ← 上一步
+      </button>
+      <button class="btn-next" id="btn-next" type="button">
+        下一步 →
+      </button>
+    </div>
+
+  </aside>
+</section>
+
+<!-- ── TRUST STRIP ── -->
+<div class="trust-strip" role="list" aria-label="服務保障">
+  <div class="ti" role="listitem">
+    <div class="ti-icon" aria-hidden="true">✓</div>
+    <div class="ti-text"><strong>申辦完全免費</strong>前往任一全家便利商店，帶身分證即辦。通常 5 分鐘完成。</div>
+  </div>
+  <div class="ti" role="listitem">
+    <div class="ti-icon" aria-hidden="true">↺</div>
+    <div class="ti-text"><strong>隨時可以停卡</strong>不滿意可申請停卡，不收違約金，月費依實際使用天數計算。</div>
+  </div>
+  <div class="ti" role="listitem">
+    <div class="ti-icon" aria-hidden="true">◎</div>
+    <div class="ti-text"><strong>全台 3,500+ 站點適用</strong>捷運、台鐵、市區公車、輕軌均可感應使用。</div>
+  </div>
+</div>
+
+<!-- ── HOW IT WORKS ── -->
+<section class="how-section" id="how" aria-labelledby="how-h2">
+  <div class="section-inner">
+    <p class="sec-eyebrow">申辦流程</p>
+    <h2 class="sec-h2" id="how-h2">三步驟，完成申辦</h2>
+    <div class="how-grid">
+      <div class="how-step">
+        <div class="how-num" data-n="1">試算你的方案</div>
+        <h3>先確認值不值得</h3>
+        <p>輸入通勤起訖站與每週搭乘天數，系統根據路線平均票價計算你的月省金額，直接告訴你推薦辦哪個版本。</p>
+      </div>
+      <div class="how-step">
+        <div class="how-num" data-n="2">到全家便利商店辦卡</div>
+        <h3>5 分鐘，帶身分證</h3>
+        <p>攜帶身分證前往任一全家便利商店。店員協助設定，無需事先預約，也不需要開通網路帳號。</p>
+      </div>
+      <div class="how-step">
+        <div class="how-num" data-n="3">隔月就開始省</div>
+        <h3>固定月費，不限次數搭乘</h3>
+        <p>每月固定扣費，指定路線不限次數進出。感應進站，走人。不需要記得儲值，不需要計算剩多少。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── PLAN COMPARISON ── -->
+<section class="plans-section" id="plans" aria-labelledby="plans-h2">
+  <div class="section-inner">
+    <p class="sec-eyebrow">方案比較</p>
+    <h2 class="sec-h2" id="plans-h2">1.0 還是 2.0？<br>看你的通勤範圍</h2>
+    <div class="plans-grid">
+      <div class="plan-card recommended">
+        <div class="plan-head">
+          <span class="plan-name">TPASS 1.0</span>
+          <span class="plan-badge badge-green">大多數人的選擇</span>
+        </div>
+        <div class="plan-body">
+          <div class="plan-price">$799 <span>/ 月</span></div>
+          <p class="plan-target">適合：台北市與新北市通勤者</p>
+          <div class="plan-feat"><span class="feat-yes">✓</span>台北捷運不限次數</div>
+          <div class="plan-feat"><span class="feat-yes">✓</span>台鐵縣市內路段</div>
+          <div class="plan-feat"><span class="feat-yes">✓</span>市區公車（台北、新北）</div>
+          <div class="plan-feat"><span class="feat-yes">✓</span>輕軌路線</div>
+          <div class="plan-feat"><span class="feat-no">–</span><span style="color:var(--muted)">跨縣市路線（需升級 2.0）</span></div>
+          <button class="plan-cta cta-primary" type="button">申辦 TPASS 1.0</button>
+        </div>
+      </div>
+      <div class="plan-card">
+        <div class="plan-head">
+          <span class="plan-name">TPASS 2.0</span>
+          <span class="plan-badge badge-gray">跨縣市通勤者</span>
+        </div>
+        <div class="plan-body">
+          <div class="plan-price">$1,200 <span>/ 月</span></div>
+          <p class="plan-target">適合：需跨縣市搭乘大眾運輸者</p>
+          <div class="plan-feat"><span class="feat-yes">✓</span>全台縣市捷運全線</div>
+          <div class="plan-feat"><span class="feat-yes">✓</span>台鐵全線不限次數</div>
+          <div class="plan-feat"><span class="feat-yes">✓</span>縣市公車全線</div>
+          <div class="plan-feat"><span class="feat-yes">✓</span>高鐵區間優惠票</div>
+          <div class="plan-feat"><span class="feat-yes">✓</span>含 1.0 全部路線</div>
+          <button class="plan-cta cta-ghost" type="button">了解 2.0 詳情</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── UPGRADE SECTION (#upgrade) — M4 ── -->
+<section class="upgrade-section" id="upgrade" aria-labelledby="upgrade-h2">
+  <div class="upgrade-inner">
+    <p class="sec-eyebrow">已有 TPASS 1.0</p>
+    <h2 class="sec-h2" id="upgrade-h2">升到 2.0，<br>你的帳怎麼算？</h2>
+    <div class="upgrade-grid">
+      <div class="upgrade-left">
+        <div class="upgrade-promise">
+          <div class="up-check" aria-hidden="true">✓</div>
+          <div class="up-text">
+            <strong>你的現有設定完整保留</strong>
+            升級不需要重新申辦，也不需要重設繳費方式。你的帳號、綁定信用卡、搭乘記錄全部繼承。只調整月費費率。
+          </div>
+        </div>
+        <div class="upgrade-promise">
+          <div class="up-check" aria-hidden="true">✓</div>
+          <div class="up-text">
+            <strong>升級後費用差距：每月 +$401</strong>
+            2.0 月費 $1,200，比 1.0 的 $799 多 $401。如果你的新路線每月能多省超過 $401，升級就值得。
+          </div>
+        </div>
+        <div class="upgrade-promise">
+          <div class="up-check" aria-hidden="true">✓</div>
+          <div class="up-text">
+            <strong>什麼情況下值得升？</strong>
+            開始需要跨縣市通勤（如台北↔桃園、台北↔基隆）；或每月使用高鐵區間車超過 3 次；或路線延伸到台北都會區以外的縣市公車。
+          </div>
+        </div>
+      </div>
+      <div class="upgrade-right">
+        <div class="upgrade-calc">
+          <div class="uc-head">費用試算範例：1.0 → 2.0</div>
+          <div class="uc-body">
+            <div class="uc-row">
+              <span class="uc-label">現在月費（1.0）</span>
+              <span class="uc-val">$799</span>
+            </div>
+            <div class="uc-row">
+              <span class="uc-label">升級後月費（2.0）</span>
+              <span class="uc-val">$1,200</span>
+            </div>
+            <div class="uc-divider"></div>
+            <div class="uc-row">
+              <span class="uc-diff-label">每月費用差距</span>
+              <span class="uc-diff-val">+$401</span>
+            </div>
+            <p class="uc-note">升級值不值得，取決於你的新路線每月能多省多少。如果新增跨縣市通勤，通常可省 $500–$800，升級划算。</p>
+            <button class="btn-upgrade" type="button">確認升級 TPASS 2.0</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── QUOTES ── -->
+<section class="quotes-section" aria-labelledby="quotes-h2">
+  <div class="section-inner">
+    <p class="sec-eyebrow">用戶怎麼說</p>
+    <h2 class="sec-h2" id="quotes-h2">真實通勤者的話</h2>
+    <div class="quotes-grid">
+      <article class="q-card">
+        <p class="q-text">辦了才知道一個月省這麼多，早知道早辦。之前都在自己算，算不清楚就一直放著。</p>
+        <div class="q-meta">
+          <div class="q-av" aria-hidden="true">J</div>
+          <div class="q-info"><strong>林小姐，新竹科學園區</strong>竹北→新竹台鐵 · 每月省 $310</div>
+        </div>
+      </article>
+      <article class="q-card">
+        <p class="q-text">太太叫我辦的，說省錢。用了一年半，現在已經不知道不辦要幹嘛了，就是一個習慣。</p>
+        <div class="q-meta">
+          <div class="q-av" aria-hidden="true">C</div>
+          <div class="q-info"><strong>陳先生，信義區</strong>大安→市政府捷運 · 每月省 $180</div>
+        </div>
+      </article>
+      <article class="q-card">
+        <p class="q-text">以前一直覺得跟我沒關係，後來換工作路線變長才查。查完五分鐘就決定辦了，沒想到這麼快。</p>
+        <div class="q-meta">
+          <div class="q-av" aria-hidden="true">W</div>
+          <div class="q-info"><strong>吳小姐，南港軟體園區</strong>南港→大直捷運 · 每月省 $240</div>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ── CTA BAND ── -->
+<section class="cta-band" aria-labelledby="cta-h2">
+  <div class="cta-inner">
+    <div class="cta-left">
+      <h2 id="cta-h2">還在猶豫？<br>先算算你的數字。</h2>
+      <p>試算完全免費，30 秒知道你每個月能省多少。不需要登入，不需要填個人資料。</p>
+    </div>
+    <button class="btn-cta" type="button" onclick="scrollToWizard()">開始試算 →</button>
+  </div>
+</section>
+
+</main>
+
+<!-- ── FOOTER ── -->
+<footer role="contentinfo">
+  <div class="footer-inner">
+    <div class="footer-logo">T<span class="g">PASS</span> 通勤月票</div>
+    <nav class="footer-links" aria-label="頁尾連結">
+      <a href="#how">如何運作</a>
+      <a href="#plans">方案比較</a>
+      <a href="#upgrade">1.0 升級</a>
+      <a href="#">常見問題</a>
+      <a href="#">隱私政策</a>
+      <a href="#">客服聯絡</a>
+    </nav>
+    <p class="footer-copy">© 2026 TPASS · 資料更新：2026-05-01</p>
+  </div>
+</footer>
+
+
+<!-- ── JAVASCRIPT ── -->
+<script>
+(function () {
+  'use strict';
+
+  var TOTAL = 3;
+  var cur   = 2; // demo starts on step 2
+
+  var steps  = [1,2,3].map(function(n){ return document.getElementById('step-'+n); });
+  var tabs   = [1,2,3].map(function(n){ return document.getElementById('tab-'+n);  });
+  var btnB   = document.getElementById('btn-back');
+  var btnN   = document.getElementById('btn-next');
+
+  function goTo(n) {
+    cur = Math.min(TOTAL, Math.max(1, n));
+
+    steps.forEach(function(el,i){
+      el.classList.toggle('active', i+1 === cur);
+    });
+    tabs.forEach(function(el,i){
+      el.classList.remove('active','done');
+      if (i+1 === cur) el.classList.add('active');
+      if (i+1 <  cur) el.classList.add('done');
+      el.setAttribute('aria-current', i+1 === cur ? 'step' : 'false');
+    });
+
+    // M5: completely hide back button on step 1
+    btnB.style.visibility = cur === 1 ? 'hidden' : 'visible';
+
+    if (cur === TOTAL) {
+      btnN.textContent = '重新試算';
+    } else {
+      btnN.textContent = '下一步 →';
+    }
+
+    updateNext();
+  }
+
+  // M5 (H5): validate step 1 inputs before allowing advance
+  function step1Valid() {
+    var f = document.getElementById('from').value.trim();
+    var t = document.getElementById('to').value.trim();
+    var x = document.getElementById('transport').value;
+    return f.length > 0 && t.length > 0 && x !== '';
+  }
+
+  function updateNext() {
+    if (cur === 1) {
+      var ok = step1Valid();
+      btnN.disabled = !ok;
+      btnN.style.cursor = ok ? 'pointer' : 'not-allowed';
+    } else {
+      btnN.disabled = false;
+      btnN.style.cursor = 'pointer';
+    }
+  }
+
+  ['from','to','transport'].forEach(function(id){
+    var el = document.getElementById(id);
+    if (el) { el.addEventListener('input', updateNext); el.addEventListener('change', updateNext); }
+  });
+
+  btnN.addEventListener('click', function(){
+    if (cur === TOTAL) { goTo(1); } else { goTo(cur+1); }
+  });
+  btnB.addEventListener('click', function(){ goTo(cur-1); });
+
+  // Radio card selection
+  document.querySelectorAll('.radio-group input[type="radio"]').forEach(function(r){
+    r.addEventListener('change', function(){
+      this.closest('.radio-group').querySelectorAll('.radio-card').forEach(function(c){
+        c.classList.remove('selected');
+      });
+      this.closest('.radio-card').classList.add('selected');
+    });
+  });
+
+  goTo(cur);
+}());
+
+function scrollToWizard() {
+  document.querySelector('.wizard-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+</script>
+
+</body>
+</html>

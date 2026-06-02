@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>V4 — Diagnostic Flow</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#fff;--bg-s:#F5F5F5;--ink:#2B2B2B;--ink2:#5C5C5C;--muted:#9A9A9A;
+  --accent:#3CB371;--ac-dk:#2A9459;--ac-lt:#E8F5EE;--line:#E8E8E8;
+  --fd:'Plus Jakarta Sans','Noto Sans TC',sans-serif;
+  --fb:'Noto Sans TC','Plus Jakarta Sans',sans-serif;
+}
+body{font-family:var(--fb);background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;min-height:100vh;display:flex;flex-direction:column}
+
+/* NAV — minimal */
+nav{display:flex;align-items:center;justify-content:space-between;padding:0 40px;height:60px;border-bottom:1px solid var(--line);flex-shrink:0}
+.logo{font-family:var(--fd);font-weight:800;font-size:1rem;letter-spacing:-.01em}
+.logo span{color:var(--accent)}
+.nav-exit{font-size:.875rem;color:var(--muted);cursor:pointer}
+
+/* PROGRESS BAR */
+.progress-bar{height:3px;background:var(--line);flex-shrink:0}
+.progress-fill{height:100%;background:var(--accent);width:40%;transition:width .3s ease-out}
+
+/* MAIN — full screen center */
+.main{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px}
+
+.question-area{width:100%;max-width:640px}
+
+/* Step counter */
+.step-counter{font-family:var(--fd);font-size:.8125rem;font-weight:600;color:var(--muted);letter-spacing:.05em;margin-bottom:32px;display:flex;align-items:center;gap:12px}
+.step-dots{display:flex;gap:6px}
+.s-dot{width:6px;height:6px;border-radius:50%;background:var(--line)}
+.s-dot.done{background:var(--ac-dk)}
+.s-dot.active{background:var(--accent);width:20px;border-radius:3px}
+
+/* Question */
+.q-label{font-size:.875rem;font-weight:600;color:var(--accent);font-family:var(--fd);margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em}
+.q-text{font-family:var(--fd);font-size:2.25rem;font-weight:800;line-height:1.1;letter-spacing:-.02em;color:var(--ink);margin-bottom:10px}
+.q-sub{font-size:1rem;color:var(--ink2);line-height:1.6;margin-bottom:40px}
+
+/* Tile options */
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:40px}
+.tile{padding:20px 24px;border:1.5px solid var(--line);border-radius:12px;cursor:pointer;background:var(--bg);transition:border-color .15s,background .15s,transform .1s}
+.tile:hover{border-color:#B8D9C7;background:#FAFCFB;transform:translateY(-1px)}
+.tile.selected{border-color:var(--accent);background:var(--ac-lt)}
+.tile-main{font-family:var(--fd);font-size:1.0625rem;font-weight:700;color:var(--ink);margin-bottom:3px}
+.tile-sub{font-size:.8125rem;color:var(--muted);line-height:1.5}
+.tile.selected .tile-main{color:var(--ac-dk)}
+.tile.selected .tile-sub{color:var(--ac-dk);opacity:.7}
+
+/* Text input variant */
+.input-area{margin-bottom:40px}
+.route-row{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:end;margin-bottom:16px}
+.fg{display:flex;flex-direction:column;gap:6px}
+.fg-label{font-family:var(--fd);font-size:.875rem;font-weight:600;color:var(--ink2)}
+.fg-input{padding:14px 16px;border:1.5px solid var(--line);border-radius:8px;font-family:var(--fb);font-size:1rem;color:var(--ink);outline:none;width:100%;transition:border-color .15s}
+.fg-input:focus{border-color:var(--accent)}
+.fg-input::placeholder{color:var(--muted)}
+.route-arrow{font-size:1.25rem;color:var(--muted);padding-bottom:12px;text-align:center}
+
+/* CTA row */
+.cta-row{display:flex;align-items:center;gap:16px}
+.btn-next{font-family:var(--fd);font-size:1rem;font-weight:700;padding:16px 40px;border-radius:8px;background:var(--accent);color:#fff;border:none;cursor:pointer}
+.btn-next:disabled{opacity:.35;cursor:not-allowed}
+.btn-back{font-family:var(--fd);font-size:.9375rem;font-weight:500;color:var(--muted);background:none;border:none;cursor:pointer;padding:16px 0}
+.hint-text{font-size:.8125rem;color:var(--muted);margin-top:16px}
+
+/* RESULT STATE */
+.result-area{width:100%;max-width:640px}
+.result-top{margin-bottom:32px}
+.result-tag{display:inline-flex;align-items:center;gap:6px;background:var(--ac-lt);color:var(--ac-dk);padding:4px 12px;border-radius:100px;font-family:var(--fd);font-size:.8125rem;font-weight:600;margin-bottom:16px}
+.result-heading{font-family:var(--fd);font-size:2rem;font-weight:800;letter-spacing:-.02em;color:var(--ink);margin-bottom:8px}
+.result-sub{font-size:1rem;color:var(--ink2);line-height:1.65}
+
+.result-card{border:2px solid var(--accent);border-radius:16px;overflow:hidden;margin-bottom:20px}
+.rc-header{background:var(--accent);padding:16px 24px;display:flex;align-items:center;justify-content:space-between}
+.rc-header-text{font-family:var(--fd);font-weight:700;font-size:.9375rem;color:#fff}
+.rc-body{padding:28px 24px}
+.savings-row{display:flex;align-items:baseline;gap:8px;margin-bottom:6px}
+.savings-amt{font-family:var(--fd);font-size:3.5rem;font-weight:800;letter-spacing:-.03em;color:var(--accent);line-height:1}
+.savings-unit{font-family:var(--fd);font-size:1.125rem;font-weight:600;color:var(--accent)}
+.savings-period{font-size:.875rem;color:var(--muted)}
+.divider{height:1px;background:var(--line);margin:20px 0}
+.detail-grid{display:grid;grid-template-columns:1fr auto;gap:6px 16px;font-size:.9rem}
+.detail-label{color:var(--ink2)}
+.detail-val{font-family:var(--fd);font-weight:600;color:var(--ink);text-align:right}
+.detail-label.accent{color:var(--ac-dk);font-weight:600}
+.detail-val.accent{color:var(--ac-dk);font-weight:800}
+.apply-btn{width:100%;padding:16px;border-radius:8px;background:var(--accent);color:#fff;font-family:var(--fd);font-size:1rem;font-weight:700;border:none;cursor:pointer;margin-top:20px}
+.rc-note{font-size:.75rem;color:var(--muted);text-align:center;margin-top:8px}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">T<span>PASS</span></div>
+  <span class="nav-exit">✕ 離開</span>
+</nav>
+
+<div class="progress-bar">
+  <div class="progress-fill"></div>
+</div>
+
+<div class="main">
+
+  <!-- SHOWING: STEP 2 — 搭乘頻率 (with result visible below) -->
+  <!-- This mockup shows step 2 active + result card to demonstrate the end state -->
+
+  <!-- Active question: step 2 -->
+  <div class="question-area" style="margin-bottom:0">
+    <div class="step-counter">
+      <div class="step-dots">
+        <div class="s-dot done"></div>
+        <div class="s-dot active"></div>
+        <div class="s-dot"></div>
+        <div class="s-dot"></div>
+      </div>
+      問題 2／4
+    </div>
+
+    <div class="q-label">搭乘頻率</div>
+    <div class="q-text">你平均每週搭幾天大眾運輸？</div>
+    <div class="q-sub">通勤以外的搭乘也算。選最接近你的情況就好。</div>
+
+    <div class="tiles">
+      <div class="tile selected">
+        <div class="tile-main">5 天</div>
+        <div class="tile-sub">週一到週五通勤</div>
+      </div>
+      <div class="tile">
+        <div class="tile-main">3–4 天</div>
+        <div class="tile-sub">部分遠端或彈性</div>
+      </div>
+      <div class="tile">
+        <div class="tile-main">1–2 天</div>
+        <div class="tile-sub">偶爾進辦公室</div>
+      </div>
+      <div class="tile">
+        <div class="tile-main">不固定</div>
+        <div class="tile-sub">每週差很多</div>
+      </div>
+    </div>
+
+    <div class="cta-row">
+      <button class="btn-back">← 上一題</button>
+      <button class="btn-next">下一題 →</button>
+    </div>
+    <div class="hint-text">你的回答只用於試算，不會儲存或分享。</div>
+  </div>
+
+</div>
+
+<!-- RESULT PREVIEW (shown after all questions answered) -->
+<div style="background:var(--bg-s);border-top:1px solid var(--line);padding:64px 40px;display:none" id="result">
+<div class="main" style="padding:0">
+  <div class="result-area">
+    <div class="result-top">
+      <div class="result-tag">✓ 試算完成</div>
+      <div class="result-heading">你每個月可以省 $342</div>
+      <div class="result-sub">根據你的路線（竹北→新竹）與搭乘頻率（每週 5 天），我們推薦你辦 TPASS 1.0。</div>
+    </div>
+
+    <div class="result-card">
+      <div class="rc-header">
+        <span class="rc-header-text">推薦方案：TPASS 1.0</span>
+        <span style="background:rgba(255,255,255,.2);color:#fff;padding:3px 10px;border-radius:100px;font-size:.75rem;font-weight:600">最適合你</span>
+      </div>
+      <div class="rc-body">
+        <div class="savings-row">
+          <span class="savings-amt">$342</span>
+          <span class="savings-unit">元 / 月</span>
+        </div>
+        <div class="savings-period">等於每年省下 $4,104</div>
+        <div class="divider"></div>
+        <div class="detail-grid">
+          <span class="detail-label">目前每月交通費（估）</span>
+          <span class="detail-val">$1,141</span>
+          <span class="detail-label">TPASS 1.0 月費</span>
+          <span class="detail-val">$799</span>
+          <span class="detail-label accent">每月節省</span>
+          <span class="detail-val accent">$342</span>
+        </div>
+        <button class="apply-btn">立即申辦 TPASS 1.0 →</button>
+        <div class="rc-note">資料更新：2026-05-01 ｜ 試算以系統平均票價估算</div>
+      </div>
+    </div>
+
+    <div style="font-size:.875rem;color:var(--ink2);text-align:center">
+      已有 TPASS 1.0？<span style="color:var(--accent);font-weight:600;cursor:pointer;margin-left:4px">查看升級 2.0 的費用差距 →</span>
+    </div>
+  </div>
+</div>
+</div>
+
+</body>
+</html>

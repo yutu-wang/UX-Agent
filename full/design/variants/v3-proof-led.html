@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>V3 — Proof-Led</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#fff;--bg-s:#F5F5F5;--ink:#2B2B2B;--ink2:#5C5C5C;--muted:#9A9A9A;
+  --accent:#3CB371;--ac-dk:#2A9459;--ac-lt:#E8F5EE;--line:#E8E8E8;
+  --fd:'Plus Jakarta Sans','Noto Sans TC',sans-serif;
+  --fb:'Noto Sans TC','Plus Jakarta Sans',sans-serif;
+}
+body{font-family:var(--fb);background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
+
+/* NAV */
+nav{display:flex;align-items:center;justify-content:space-between;padding:0 60px;height:64px;border-bottom:1px solid var(--line)}
+.logo{font-family:var(--fd);font-weight:800;font-size:1.125rem;letter-spacing:-.01em}
+.logo span{color:var(--accent)}
+.nav-right{display:flex;align-items:center;gap:32px}
+.nav-links{display:flex;gap:32px;font-size:.875rem;color:var(--ink2)}
+.nav-btn{font-family:var(--fd);font-size:.875rem;font-weight:600;padding:8px 18px;border-radius:8px;border:1.5px solid var(--line);color:var(--ink2);cursor:pointer;background:var(--bg)}
+
+/* HERO — centered number */
+.hero{max-width:960px;margin:0 auto;padding:96px 40px 80px;text-align:center}
+.hero-eyebrow{font-family:var(--fd);font-size:.75rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:24px}
+
+.proof-card{display:inline-flex;flex-direction:column;align-items:center;background:var(--ac-lt);border:2px solid var(--accent);border-radius:16px;padding:40px 64px;margin-bottom:48px}
+.proof-label{font-family:var(--fd);font-size:.875rem;font-weight:600;color:var(--ac-dk);margin-bottom:12px}
+.proof-amount{font-family:var(--fd);font-size:5rem;font-weight:800;line-height:1;letter-spacing:-.04em;color:var(--accent)}
+.proof-unit{font-family:var(--fd);font-size:1.5rem;font-weight:700;color:var(--accent);margin-left:6px;vertical-align:middle}
+.proof-route{font-size:.9375rem;color:var(--ac-dk);margin-top:12px;font-weight:500}
+
+.hero-sub{font-size:1.125rem;color:var(--ink2);line-height:1.7;max-width:520px;margin:0 auto 16px}
+.hero-micro{font-size:.8125rem;color:var(--muted);margin-bottom:48px}
+
+/* QUOTES CAROUSEL */
+.quotes{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;max-width:960px;margin:0 auto 64px;padding:0 40px}
+.quote-card{background:var(--bg-s);border-radius:12px;padding:24px;text-align:left}
+.q-text{font-size:.9375rem;color:var(--ink2);line-height:1.65;margin-bottom:16px;font-style:italic}
+.q-text::before{content:'"';color:var(--accent);font-size:1.25rem;font-weight:800;font-family:var(--fd);line-height:0;vertical-align:-.2em;margin-right:2px}
+.q-meta{display:flex;align-items:center;gap:10px}
+.q-dot{width:32px;height:32px;border-radius:50%;background:var(--line);display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:.6875rem;font-weight:700;color:var(--ink2);flex-shrink:0}
+.q-detail{font-size:.8125rem;color:var(--muted);line-height:1.5}
+.q-detail strong{color:var(--ink2);font-weight:600;display:block}
+
+/* CALCULATOR STRIP */
+.calc-strip{background:var(--ink);padding:64px 60px;display:flex;align-items:center;justify-content:center;gap:80px}
+.calc-left{}
+.calc-left h2{font-family:var(--fd);font-size:2rem;font-weight:800;color:#fff;line-height:1.1;letter-spacing:-.015em;margin-bottom:12px}
+.calc-left p{font-size:1rem;color:rgba(255,255,255,.55);line-height:1.7}
+.calc-right{flex-shrink:0}
+
+.mini-form{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:28px;width:400px}
+.mf-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.mf-group{display:flex;flex-direction:column;gap:6px}
+.mf-label{font-family:var(--fd);font-size:.8125rem;font-weight:600;color:rgba(255,255,255,.65)}
+.mf-input{padding:11px 14px;border:1.5px solid rgba(255,255,255,.15);border-radius:8px;background:rgba(255,255,255,.06);color:#fff;font-family:var(--fb);font-size:.9375rem;outline:none}
+.mf-input::placeholder{color:rgba(255,255,255,.3)}
+.mf-select{padding:11px 14px;border:1.5px solid rgba(255,255,255,.15);border-radius:8px;background:rgba(255,255,255,.06);color:#fff;font-family:var(--fb);font-size:.9375rem;outline:none;width:100%;appearance:none}
+.calc-btn{width:100%;padding:15px;border-radius:8px;background:var(--accent);color:#fff;font-family:var(--fd);font-size:1rem;font-weight:700;border:none;cursor:pointer;margin-top:4px}
+.calc-note{font-size:.75rem;color:rgba(255,255,255,.3);text-align:center;margin-top:10px}
+
+/* FEATURES */
+.features{max-width:960px;margin:0 auto;padding:80px 40px;display:grid;grid-template-columns:repeat(3,1fr);gap:32px}
+.feat{border-top:2px solid var(--line);padding-top:24px}
+.feat-tag{font-family:var(--fd);font-size:.75rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:12px}
+.feat h3{font-family:var(--fd);font-size:1.125rem;font-weight:700;color:var(--ink);margin-bottom:8px}
+.feat p{font-size:.875rem;color:var(--ink2);line-height:1.65}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">T<span>PASS</span></div>
+  <div class="nav-right">
+    <div class="nav-links">
+      <span>方案介紹</span>
+      <span>申辦流程</span>
+      <span>常見問題</span>
+    </div>
+    <button class="nav-btn">已有 1.0，查看升級</button>
+  </div>
+</nav>
+
+<!-- PROOF HERO -->
+<div class="hero">
+  <div class="hero-eyebrow">真實用戶數據 · 2026 年 5 月</div>
+
+  <div class="proof-card">
+    <div class="proof-label">台北通勤族平均每月省下</div>
+    <div>
+      <span class="proof-amount">$342</span><span class="proof-unit">元</span>
+    </div>
+    <div class="proof-route">以捷運南港線、板南線日常通勤計算</div>
+  </div>
+
+  <p class="hero-sub">TPASS 通勤月票讓你固定月費、不限次數搭乘。<br>輸入你的路線，算出你自己的數字。</p>
+  <p class="hero-micro">87 萬用戶使用中 · 資料更新：2026-05-01</p>
+</div>
+
+<!-- TRUST QUOTES -->
+<div class="quotes">
+  <div class="quote-card">
+    <p class="q-text">辦了才知道一個月省這麼多，早知道早辦。之前都在自己算，算不清楚就放著了。</p>
+    <div class="q-meta">
+      <div class="q-dot">J</div>
+      <div class="q-detail">
+        <strong>林小姐 · 新竹科學園區</strong>
+        竹北→新竹 · 每月省 $310
+      </div>
+    </div>
+  </div>
+  <div class="quote-card">
+    <p class="q-text">太太叫我辦的，說省錢。用了一年半，現在已經不知道不辦要幹嘛了。</p>
+    <div class="q-meta">
+      <div class="q-dot">C</div>
+      <div class="q-detail">
+        <strong>陳先生 · 信義區</strong>
+        大安→市政府 · 每月省 $180
+      </div>
+    </div>
+  </div>
+  <div class="quote-card">
+    <p class="q-text">以前一直覺得跟我沒關係，後來路線變長才查。查完五分鐘就決定辦了。</p>
+    <div class="q-meta">
+      <div class="q-dot">W</div>
+      <div class="q-detail">
+        <strong>吳小姐 · 南港軟體園區</strong>
+        南港→大直 · 每月省 $240
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CALCULATOR STRIP -->
+<div class="calc-strip">
+  <div class="calc-left">
+    <h2>你的路線<br>能省多少？</h2>
+    <p>輸入起訖站與搭乘天數，<br>30 秒得到你的專屬試算。</p>
+  </div>
+  <div class="calc-right">
+    <div class="mini-form">
+      <div class="mf-row">
+        <div class="mf-group">
+          <div class="mf-label">出發站</div>
+          <input class="mf-input" type="text" placeholder="例：竹北站">
+        </div>
+        <div class="mf-group">
+          <div class="mf-label">到達站</div>
+          <input class="mf-input" type="text" placeholder="例：新竹站">
+        </div>
+      </div>
+      <div class="mf-group" style="margin-bottom:16px">
+        <div class="mf-label">每週搭幾天</div>
+        <select class="mf-select">
+          <option>5 天（週一至週五）</option>
+          <option>3–4 天</option>
+          <option>1–2 天</option>
+        </select>
+      </div>
+      <button class="calc-btn">計算我能省多少 →</button>
+      <div class="calc-note">完全免費試算 · 不需要登入</div>
+    </div>
+  </div>
+</div>
+
+<!-- FEATURES -->
+<div class="features">
+  <div class="feat">
+    <div class="feat-tag">申辦</div>
+    <h3>5 分鐘，全家就辦好</h3>
+    <p>帶身分證前往任一全家便利商店，現場辦理。不需要網路帳號，不需要預約。</p>
+  </div>
+  <div class="feat">
+    <div class="feat-tag">升級</div>
+    <h3>從 1.0 升到 2.0，設定全保留</h3>
+    <p>升級不需要重新申辦，你的繳費方式與設定完整繼承。只調整月費費率。</p>
+  </div>
+  <div class="feat">
+    <div class="feat-tag">回饋</div>
+    <h3>T 幣回饋，等於直接折現</h3>
+    <p>每月搭乘回饋的 T 幣可在 2,000+ 合作商家折抵消費，1 T 幣 = 1 元。</p>
+  </div>
+</div>
+
+</body>
+</html>

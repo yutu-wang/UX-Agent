@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>V1 — Calculator First</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#fff;--bg-s:#F5F5F5;--ink:#2B2B2B;--ink2:#5C5C5C;--muted:#9A9A9A;
+  --accent:#3CB371;--ac-dk:#2A9459;--ac-lt:#E8F5EE;--line:#E8E8E8;
+  --fd:'Plus Jakarta Sans','Noto Sans TC',sans-serif;
+  --fb:'Noto Sans TC','Plus Jakarta Sans',sans-serif;
+}
+body{font-family:var(--fb);background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
+
+/* NAV */
+nav{display:flex;align-items:center;justify-content:space-between;padding:0 60px;height:64px;border-bottom:1px solid var(--line)}
+.logo{font-family:var(--fd);font-weight:800;font-size:1.125rem;color:var(--ink);letter-spacing:-0.01em}
+.logo span{color:var(--accent)}
+.nav-links{display:flex;gap:32px;font-size:.875rem;color:var(--ink2)}
+.nav-cta{font-family:var(--fd);font-size:.875rem;font-weight:600;color:var(--accent);text-decoration:none}
+
+/* HERO — 2-column */
+.hero{display:grid;grid-template-columns:1fr 480px;gap:0;min-height:calc(100vh - 64px);max-width:100%}
+
+.hero-left{padding:80px 60px 80px 60px;display:flex;flex-direction:column;justify-content:center;border-right:1px solid var(--line)}
+.eyebrow{font-family:var(--fd);font-size:.75rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:20px}
+h1{font-family:var(--fd);font-size:3.25rem;font-weight:800;line-height:1.04;letter-spacing:-.025em;color:var(--ink);margin-bottom:24px}
+h1 em{font-style:normal;color:var(--accent)}
+.hero-desc{font-size:1.0625rem;color:var(--ink2);line-height:1.7;max-width:460px;margin-bottom:40px}
+.trust-row{display:flex;gap:32px}
+.trust-stat{display:flex;flex-direction:column;gap:2px}
+.trust-num{font-family:var(--fd);font-size:1.5rem;font-weight:800;color:var(--ink)}
+.trust-label{font-size:.8125rem;color:var(--muted)}
+
+/* WIZARD PANEL */
+.wizard-panel{background:var(--bg-s);display:flex;flex-direction:column}
+.w-header{padding:32px 36px 0;border-bottom:1px solid var(--line);background:var(--bg)}
+.w-title{font-family:var(--fd);font-size:1rem;font-weight:700;color:var(--ink);margin-bottom:20px}
+.steps{display:flex;gap:0}
+.step{flex:1;padding:10px 0 12px;font-size:.8125rem;font-weight:500;color:var(--muted);border-bottom:2px solid transparent;text-align:center}
+.step.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:700}
+.step.done{color:var(--ink2);border-bottom-color:var(--line)}
+
+.w-body{padding:36px;flex:1}
+.w-q{font-family:var(--fd);font-size:1.25rem;font-weight:700;color:var(--ink);margin-bottom:6px}
+.w-hint{font-size:.875rem;color:var(--muted);margin-bottom:28px}
+
+.radio-group{display:flex;flex-direction:column;gap:10px}
+.radio-card{display:flex;align-items:center;gap:14px;padding:14px 18px;border:1.5px solid var(--line);border-radius:8px;cursor:pointer;background:var(--bg);transition:border-color .15s,background .15s}
+.radio-card.selected{border-color:var(--accent);background:var(--ac-lt)}
+.radio-card input{accent-color:var(--accent);width:16px;height:16px;flex-shrink:0}
+.radio-label{font-family:var(--fd);font-size:.9375rem;font-weight:500;color:var(--ink)}
+.radio-sub{font-size:.8125rem;color:var(--muted);margin-top:1px}
+
+.input-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.fg{display:flex;flex-direction:column;gap:6px}
+.fg label{font-family:var(--fd);font-size:.875rem;font-weight:600;color:var(--ink)}
+.fg input,.fg select{padding:12px 14px;border:1.5px solid var(--line);border-radius:8px;font-family:var(--fb);font-size:.9375rem;color:var(--ink);background:var(--bg);outline:none}
+.fg input::placeholder{color:var(--muted)}
+.fg select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239A9A9A' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:36px;cursor:pointer}
+
+.w-footer{padding:24px 36px;border-top:1px solid var(--line);background:var(--bg);display:flex;justify-content:space-between;align-items:center}
+.btn{font-family:var(--fd);font-size:.9375rem;font-weight:600;padding:12px 24px;border-radius:8px;border:1.5px solid transparent;cursor:pointer}
+.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn-ghost{background:transparent;color:var(--ink2);border-color:var(--line)}
+.btn-lg{padding:16px 36px;font-size:1rem}
+
+.progress{font-size:.8125rem;color:var(--muted)}
+
+/* TRUST STRIP */
+.trust-strip{background:var(--bg);border-top:1px solid var(--line);padding:32px 60px;display:flex;gap:48px;align-items:center}
+.trust-item{display:flex;align-items:center;gap:12px}
+.trust-icon{width:36px;height:36px;background:var(--ac-lt);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.trust-text{font-size:.875rem;color:var(--ink2);line-height:1.5}
+.trust-text strong{color:var(--ink);font-weight:600}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">T<span>PASS</span></div>
+  <div class="nav-links">
+    <span>方案介紹</span>
+    <span>申辦流程</span>
+    <span>常見問題</span>
+  </div>
+  <a href="#" class="nav-cta">登入帳號</a>
+</nav>
+
+<div class="hero">
+  <!-- LEFT: VALUE PROP -->
+  <div class="hero-left">
+    <div class="eyebrow">TPASS 通勤月票</div>
+    <h1>你每個月<br>可以省<em>多少</em>？</h1>
+    <p class="hero-desc">輸入你的通勤路線，30 秒內得到你的專屬試算結果。不需要背景知識，直接看數字。</p>
+    <div class="trust-row">
+      <div class="trust-stat">
+        <span class="trust-num">$342</span>
+        <span class="trust-label">竹北→新竹 平均月省</span>
+      </div>
+      <div class="trust-stat">
+        <span class="trust-num">87 萬</span>
+        <span class="trust-label">現有持卡用戶</span>
+      </div>
+      <div class="trust-stat">
+        <span class="trust-num">97%</span>
+        <span class="trust-label">辦卡後持續使用</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: WIZARD PANEL -->
+  <div class="wizard-panel">
+    <div class="w-header">
+      <div class="w-title">找出適合你的方案</div>
+      <div class="steps">
+        <div class="step done">1 通勤路線</div>
+        <div class="step active">2 搭乘頻率</div>
+        <div class="step">3 試算結果</div>
+      </div>
+    </div>
+
+    <div class="w-body">
+      <div class="w-q">你平均每週搭幾天？</div>
+      <div class="w-hint">不確定的話，選最接近的就好。</div>
+
+      <div class="radio-group">
+        <label class="radio-card selected">
+          <input type="radio" name="days" checked>
+          <div>
+            <div class="radio-label">5 天（週一至週五）</div>
+            <div class="radio-sub">標準通勤族</div>
+          </div>
+        </label>
+        <label class="radio-card">
+          <input type="radio" name="days">
+          <div>
+            <div class="radio-label">3–4 天</div>
+            <div class="radio-sub">部分遠端、彈性工作</div>
+          </div>
+        </label>
+        <label class="radio-card">
+          <input type="radio" name="days">
+          <div>
+            <div class="radio-label">1–2 天</div>
+            <div class="radio-sub">偶爾進辦公室</div>
+          </div>
+        </label>
+        <label class="radio-card">
+          <input type="radio" name="days">
+          <div>
+            <div class="radio-label">不固定</div>
+            <div class="radio-sub">按需搭乘</div>
+          </div>
+        </label>
+      </div>
+    </div>
+
+    <div class="w-footer">
+      <button class="btn btn-ghost">← 上一步</button>
+      <div style="display:flex;align-items:center;gap:20px">
+        <span class="progress">第 2 步，共 3 步</span>
+        <button class="btn btn-primary">下一步 →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TRUST STRIP -->
+<div class="trust-strip">
+  <div class="trust-item">
+    <div class="trust-icon">✓</div>
+    <div class="trust-text"><strong>申辦免費</strong><br>全家便利商店，帶身分證即辦</div>
+  </div>
+  <div class="trust-item">
+    <div class="trust-icon">↺</div>
+    <div class="trust-text"><strong>隨時終止</strong><br>不滿意可停卡，不收違約金</div>
+  </div>
+  <div class="trust-item">
+    <div class="trust-icon">$</div>
+    <div class="trust-text"><strong>平均月省 $280</strong><br>依實際搭乘路線計算，資料更新：2026-05-01</div>
+  </div>
+</div>
+
+</body>
+</html>

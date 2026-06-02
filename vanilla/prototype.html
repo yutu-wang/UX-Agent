@@ -1,0 +1,1627 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>T-Pass Prototype</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  :root {
+    --brand: #00A878;
+    --brand-dark: #007A58;
+    --brand-light: #E6F7F3;
+    --danger: #E53E3E;
+    --warning: #DD6B20;
+    --text-primary: #1A202C;
+    --text-secondary: #718096;
+    --text-hint: #A0AEC0;
+    --border: #E2E8F0;
+    --bg: #F7FAFC;
+    --white: #FFFFFF;
+    --shadow: 0 2px 12px rgba(0,0,0,0.08);
+    --radius: 16px;
+    --radius-sm: 10px;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'PingFang TC', 'Noto Sans TC', sans-serif;
+    background: #E2E8F0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    color: var(--text-primary);
+  }
+
+  .device {
+    width: 390px;
+    height: 844px;
+    background: var(--bg);
+    border-radius: 44px;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.25);
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Screens */
+  .screen {
+    display: none;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+    position: absolute;
+    width: 100%;
+    top: 0;
+    left: 0;
+    background: var(--bg);
+  }
+  .screen.active { display: flex; }
+
+  /* Transitions */
+  .screen.slide-in { animation: slideIn 250ms ease forwards; }
+  .screen.slide-out { animation: slideOut 250ms ease forwards; }
+  .screen.slide-back-in { animation: slideBackIn 250ms ease forwards; }
+  @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+  @keyframes slideOut { from { transform: translateX(0); } to { transform: translateX(-30%); opacity: 0.5; } }
+  @keyframes slideBackIn { from { transform: translateX(-30%); opacity: 0.5; } to { transform: translateX(0); opacity: 1; } }
+
+  /* Scrollable content */
+  .scroll-area { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  .scroll-area::-webkit-scrollbar { display: none; }
+
+  /* ── Typography ── */
+  h1 { font-size: 28px; font-weight: 700; line-height: 1.2; }
+  h2 { font-size: 22px; font-weight: 700; }
+  h3 { font-size: 17px; font-weight: 600; }
+  .body { font-size: 15px; line-height: 1.6; }
+  .caption { font-size: 13px; color: var(--text-secondary); }
+  .hint { font-size: 12px; color: var(--text-hint); }
+
+  /* ── Buttons ── */
+  .btn {
+    display: block; width: 100%; padding: 16px;
+    border-radius: 14px; border: none; font-size: 16px; font-weight: 600;
+    cursor: pointer; transition: transform 80ms, opacity 150ms;
+    text-align: center;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn-primary { background: var(--brand); color: white; }
+  .btn-primary:disabled { background: var(--border); color: var(--text-hint); cursor: not-allowed; }
+  .btn-secondary { background: var(--brand-light); color: var(--brand-dark); }
+  .btn-ghost { background: transparent; color: var(--text-secondary); font-weight: 500; }
+  .btn-danger { background: #FFF5F5; color: var(--danger); }
+  .btn-sm { padding: 10px 20px; font-size: 14px; width: auto; display: inline-block; }
+
+  /* ── App Bar ── */
+  .appbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 56px 20px 16px;
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .appbar.transparent { background: transparent; border-bottom: none; }
+  .appbar-title { font-size: 18px; font-weight: 700; }
+  .back-btn {
+    display: flex; align-items: center; gap: 4px;
+    color: var(--brand); font-size: 15px; font-weight: 500;
+    background: none; border: none; cursor: pointer; padding: 4px;
+  }
+  .icon-btn {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--bg); border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+
+  /* ── Tab Bar ── */
+  .tab-bar {
+    display: flex; background: var(--white);
+    border-top: 1px solid var(--border);
+    padding: 8px 0 28px;
+    flex-shrink: 0;
+  }
+  .tab-item {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; gap: 3px;
+    background: none; border: none; cursor: pointer;
+    padding: 4px;
+    color: var(--text-hint); font-size: 11px; font-weight: 500;
+    transition: color 150ms;
+  }
+  .tab-item.active { color: var(--brand); }
+  .tab-icon { font-size: 22px; line-height: 1; }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--white); border-radius: var(--radius);
+    box-shadow: var(--shadow); padding: 20px;
+  }
+  .card-hero {
+    background: linear-gradient(135deg, var(--brand) 0%, #00C896 100%);
+    color: white; border-radius: var(--radius); padding: 24px;
+    box-shadow: 0 8px 24px rgba(0,168,120,0.3);
+  }
+
+  /* ── List Items ── */
+  .list-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 0; border-bottom: 1px solid var(--border);
+    cursor: pointer;
+  }
+  .list-item:last-child { border-bottom: none; }
+  .list-item-left { display: flex; flex-direction: column; gap: 2px; }
+  .list-item-right { display: flex; align-items: center; gap: 6px; color: var(--text-hint); }
+
+  /* ── Form ── */
+  .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+  .form-label { font-size: 13px; font-weight: 600; color: var(--text-secondary); }
+  .form-input {
+    padding: 14px 16px; border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm); font-size: 16px;
+    background: var(--white); outline: none;
+    transition: border-color 150ms;
+  }
+  .form-input:focus { border-color: var(--brand); }
+  .form-error { font-size: 12px; color: var(--danger); display: none; }
+  .form-error.show { display: block; }
+
+  /* ── Radio Cards ── */
+  .radio-card {
+    display: flex; align-items: center; padding: 16px;
+    border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+    margin-bottom: 10px; cursor: pointer;
+    transition: border-color 150ms, background 150ms;
+    background: var(--white);
+  }
+  .radio-card.selected { border-color: var(--brand); background: var(--brand-light); }
+  .radio-dot {
+    width: 20px; height: 20px; border-radius: 50%;
+    border: 2px solid var(--border); margin-right: 12px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; transition: border-color 150ms;
+  }
+  .radio-card.selected .radio-dot { border-color: var(--brand); }
+  .radio-dot-inner {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--brand); display: none;
+  }
+  .radio-card.selected .radio-dot-inner { display: block; }
+  .radio-card-content { flex: 1; }
+  .radio-card-title { font-size: 15px; font-weight: 600; }
+  .radio-card-subtitle { font-size: 13px; color: var(--text-secondary); margin-top: 2px; }
+  .radio-card-badge {
+    font-size: 12px; font-weight: 600; color: var(--brand);
+    background: var(--brand-light); padding: 3px 8px;
+    border-radius: 20px;
+  }
+
+  /* ── Progress Steps ── */
+  .progress-steps {
+    display: flex; align-items: center; gap: 0;
+    padding: 0 20px 16px;
+  }
+  .step-dot {
+    width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; flex-shrink: 0;
+    transition: all 200ms;
+  }
+  .step-dot.done { background: var(--brand); color: white; }
+  .step-dot.active { background: var(--brand); color: white; box-shadow: 0 0 0 4px var(--brand-light); }
+  .step-dot.pending { background: var(--border); color: var(--text-hint); }
+  .step-line { flex: 1; height: 2px; background: var(--border); transition: background 200ms; }
+  .step-line.done { background: var(--brand); }
+
+  /* ── Chips / Tags ── */
+  .chip {
+    display: inline-flex; align-items: center; padding: 4px 12px;
+    border-radius: 20px; font-size: 12px; font-weight: 600;
+  }
+  .chip-success { background: #E6F7F3; color: var(--brand-dark); }
+  .chip-warning { background: #FFFAF0; color: var(--warning); }
+  .chip-error { background: #FFF5F5; color: var(--danger); }
+
+  /* ── Toast ── */
+  .toast {
+    position: absolute; bottom: 120px; left: 20px; right: 20px;
+    background: #1A202C; color: white;
+    padding: 14px 20px; border-radius: 12px;
+    font-size: 14px; font-weight: 500;
+    display: flex; align-items: center; gap: 10px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+    z-index: 1000; opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 250ms, transform 250ms;
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  /* ── Bottom Sheet ── */
+  .overlay {
+    position: absolute; inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 100; opacity: 0;
+    transition: opacity 250ms;
+    pointer-events: none;
+  }
+  .overlay.show { opacity: 1; pointer-events: all; }
+  .bottom-sheet {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    background: var(--white); border-radius: 24px 24px 0 0;
+    padding: 12px 20px 40px;
+    z-index: 101;
+    transform: translateY(100%);
+    transition: transform 300ms cubic-bezier(0.32,0.72,0,1);
+    max-height: 70%;
+    overflow-y: auto;
+  }
+  .bottom-sheet.show { transform: translateY(0); }
+  .sheet-handle {
+    width: 40px; height: 4px; background: var(--border);
+    border-radius: 2px; margin: 0 auto 16px;
+  }
+
+  /* ── Skeleton ── */
+  .skeleton {
+    background: linear-gradient(90deg, #EDF2F7 25%, #E2E8F0 50%, #EDF2F7 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 8px;
+  }
+  @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+  /* ── Divider ── */
+  .divider { height: 1px; background: var(--border); margin: 16px 0; }
+  .section-divider { height: 8px; background: var(--bg); margin: 0 -20px; }
+
+  /* ── Amount ── */
+  .amount-big { font-size: 42px; font-weight: 800; line-height: 1; }
+  .amount-green { color: var(--brand); }
+
+  /* ── Padding helpers ── */
+  .p20 { padding: 0 20px; }
+  .pt16 { padding-top: 16px; }
+  .pb16 { padding-bottom: 16px; }
+  .gap8 { display: flex; flex-direction: column; gap: 8px; }
+  .gap16 { display: flex; flex-direction: column; gap: 16px; }
+  .row { display: flex; align-items: center; }
+  .row-between { display: flex; align-items: center; justify-content: space-between; }
+
+  /* ── Progress Bar ── */
+  .progress-bar-track {
+    height: 6px; background: rgba(255,255,255,0.3);
+    border-radius: 3px; overflow: hidden; margin-top: 8px;
+  }
+  .progress-bar-fill {
+    height: 100%; background: white; border-radius: 3px;
+    transition: width 600ms ease;
+  }
+
+  /* ── Upload Area ── */
+  .upload-area {
+    border: 2px dashed var(--border); border-radius: var(--radius);
+    padding: 40px 20px; text-align: center; cursor: pointer;
+    transition: border-color 150ms, background 150ms;
+  }
+  .upload-area:hover { border-color: var(--brand); background: var(--brand-light); }
+  .upload-area.has-file { border-color: var(--brand); background: var(--brand-light); border-style: solid; }
+  .upload-icon { font-size: 40px; margin-bottom: 8px; }
+
+  /* ── Record Item ── */
+  .record-item {
+    display: flex; align-items: center;
+    padding: 12px 0; border-bottom: 1px solid var(--border);
+  }
+  .record-item:last-child { border-bottom: none; }
+  .record-icon {
+    width: 40px; height: 40px; border-radius: 12px;
+    background: var(--brand-light); display: flex; align-items: center;
+    justify-content: center; font-size: 18px; margin-right: 12px;
+    flex-shrink: 0;
+  }
+  .record-info { flex: 1; }
+  .record-route { font-size: 14px; font-weight: 600; }
+  .record-time { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+  .record-amount { text-align: right; }
+  .record-original { font-size: 12px; color: var(--text-hint); text-decoration: line-through; }
+  .record-discounted { font-size: 14px; font-weight: 700; color: var(--brand); }
+
+  /* ── Notification Badge ── */
+  .badge {
+    width: 8px; height: 8px; background: var(--danger);
+    border-radius: 50%; position: absolute; top: 4px; right: 4px;
+  }
+
+  /* ── FAQ ── */
+  .faq-item {
+    padding: 14px 0; border-bottom: 1px solid var(--border); cursor: pointer;
+  }
+  .faq-item:last-child { border-bottom: none; }
+  .faq-q { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+  .faq-a {
+    font-size: 13px; color: var(--text-secondary); margin-top: 8px;
+    line-height: 1.6; display: none;
+  }
+  .faq-item.open .faq-a { display: block; }
+
+  /* ── Success animation ── */
+  .success-circle {
+    width: 80px; height: 80px; background: var(--brand-light);
+    border-radius: 50%; display: flex; align-items: center;
+    justify-content: center; font-size: 36px; margin: 0 auto 20px;
+    animation: popIn 400ms cubic-bezier(0.34,1.56,0.64,1) forwards;
+  }
+  @keyframes popIn {
+    from { transform: scale(0); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+
+  /* ── Month switcher ── */
+  .month-switcher {
+    display: flex; align-items: center; justify-content: center; gap: 20px;
+    padding: 12px 20px; background: var(--white);
+    border-bottom: 1px solid var(--border);
+  }
+  .month-arrow {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--bg); border: none; cursor: pointer;
+    font-size: 16px; display: flex; align-items: center; justify-content: center;
+    transition: background 150ms;
+  }
+  .month-arrow:hover { background: var(--brand-light); }
+  .month-label { font-size: 16px; font-weight: 700; min-width: 100px; text-align: center; }
+
+  /* ── Plan card ── */
+  .plan-card {
+    border: 1.5px solid var(--border); border-radius: var(--radius);
+    padding: 20px; background: var(--white); margin-bottom: 12px;
+    cursor: pointer; transition: border-color 150ms, box-shadow 150ms;
+  }
+  .plan-card:hover { border-color: var(--brand); box-shadow: 0 4px 16px rgba(0,168,120,0.12); }
+  .plan-card.current { border-color: var(--brand); background: var(--brand-light); }
+
+  /* ── Quick action grid ── */
+  .quick-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+    padding: 0 20px;
+  }
+  .quick-btn {
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    padding: 16px 8px; background: var(--white);
+    border-radius: var(--radius-sm); border: none; cursor: pointer;
+    font-size: 12px; color: var(--text-secondary); font-weight: 500;
+    box-shadow: var(--shadow); transition: transform 100ms;
+  }
+  .quick-btn:active { transform: scale(0.95); }
+  .quick-btn-icon { font-size: 24px; }
+
+  /* ── Notice banner ── */
+  .notice {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 16px; border-radius: var(--radius-sm);
+    font-size: 13px; font-weight: 500;
+  }
+  .notice-info { background: #EBF8FF; color: #2B6CB0; }
+  .notice-warning { background: #FFFAF0; color: #C05621; }
+
+  /* ── Scrollable tab ── */
+  .region-tabs {
+    display: flex; overflow-x: auto; gap: 8px; padding: 0 20px 16px;
+    scrollbar-width: none;
+  }
+  .region-tabs::-webkit-scrollbar { display: none; }
+  .region-tab {
+    flex-shrink: 0; padding: 8px 16px; border-radius: 20px;
+    border: 1.5px solid var(--border); font-size: 13px; font-weight: 600;
+    cursor: pointer; background: var(--white); transition: all 150ms;
+  }
+  .region-tab.active {
+    background: var(--brand); color: white; border-color: var(--brand);
+  }
+
+  /* Calculator */
+  .calc-box {
+    background: var(--bg); border-radius: var(--radius-sm); padding: 16px;
+    margin-bottom: 16px;
+  }
+  .calc-row {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
+  }
+  .calc-row:last-child { margin-bottom: 0; }
+  .calc-input {
+    width: 64px; padding: 8px 10px; border: 1.5px solid var(--border);
+    border-radius: 8px; font-size: 15px; font-weight: 600; text-align: center;
+    outline: none; background: var(--white);
+  }
+  .calc-input:focus { border-color: var(--brand); }
+  .calc-result {
+    padding: 12px 16px; background: var(--brand-light);
+    border-radius: var(--radius-sm); text-align: center;
+    font-size: 15px; font-weight: 600; color: var(--brand-dark);
+  }
+
+  /* ── Payment badge ── */
+  .payment-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 0; border-bottom: 1px solid var(--border);
+  }
+  .payment-item:last-child { border-bottom: none; }
+  .payment-icon {
+    width: 44px; height: 30px; background: var(--bg); border-radius: 6px;
+    display: flex; align-items: center; justify-content: center; font-size: 18px;
+  }
+  .payment-info { flex: 1; }
+  .payment-name { font-size: 14px; font-weight: 600; }
+  .payment-detail { font-size: 12px; color: var(--text-secondary); }
+  .payment-default {
+    font-size: 11px; font-weight: 600; color: var(--brand);
+    background: var(--brand-light); padding: 2px 8px; border-radius: 10px;
+  }
+
+</style>
+</head>
+<body>
+
+<div class="device" id="app">
+
+  <!-- ══════════════════════════════════════
+       SCREEN: Welcome
+  ══════════════════════════════════════ -->
+  <div class="screen active" id="screen-welcome" style="background: linear-gradient(160deg, #00A878 0%, #00C896 60%, #E6F7F3 100%);">
+    <div style="flex:1; display:flex; flex-direction:column; justify-content:flex-end; padding: 60px 32px 40px;">
+      <div style="margin-bottom:48px;">
+        <div style="font-size:48px; font-weight:900; color:white; letter-spacing:-1px; margin-bottom:8px;">T-Pass</div>
+        <div style="font-size:26px; font-weight:700; color:white; margin-bottom:12px; line-height:1.3;">全台通用<br>每月省錢</div>
+        <div style="font-size:16px; color:rgba(255,255,255,0.85); line-height:1.6;">通勤、通學、假日出遊都適用<br>一張卡搞定北北基、桃竹、中部、南部</div>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:12px;">
+        <button class="btn btn-primary" style="background:white; color:var(--brand-dark); font-size:17px; padding:18px;"
+          onclick="go('screen-register')">立即申辦</button>
+        <button class="btn btn-ghost" style="color:rgba(255,255,255,0.9); font-size:15px;"
+          onclick="goHome()">已有帳號，登入</button>
+      </div>
+      <div style="text-align:center; margin-top:16px; font-size:12px; color:rgba(255,255,255,0.6);">
+        目前已有 120 萬人使用
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       SCREEN: Register
+  ══════════════════════════════════════ -->
+  <div class="screen" id="screen-register">
+    <div class="appbar transparent">
+      <button class="back-btn" onclick="go('screen-welcome')">← 返回</button>
+      <div></div>
+    </div>
+    <div class="scroll-area p20" style="padding-top: 8px;">
+      <h2 style="margin-bottom:6px;">建立帳號</h2>
+      <p class="caption" style="margin-bottom:28px;">輸入手機號碼以開始申辦</p>
+
+      <div class="form-group">
+        <label class="form-label">手機號碼</label>
+        <input class="form-input" type="tel" id="phone-input" placeholder="09XX-XXX-XXX"
+          oninput="validatePhone(this)">
+        <span class="form-error" id="phone-error">請輸入有效的台灣手機號碼</span>
+      </div>
+
+      <div class="notice notice-info" style="margin-bottom:24px;">
+        ℹ️ 我們將傳送 6 位數驗證碼至您的手機
+      </div>
+
+      <button class="btn btn-primary" id="phone-next-btn" disabled onclick="go('screen-verify')">
+        發送驗證碼
+      </button>
+
+      <p style="text-align:center; margin-top:20px; font-size:13px; color:var(--text-secondary);">
+        繼續即代表您同意
+        <span style="color:var(--brand); cursor:pointer;">服務條款</span> 及
+        <span style="color:var(--brand); cursor:pointer;">隱私政策</span>
+      </p>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       SCREEN: Verify OTP
+  ══════════════════════════════════════ -->
+  <div class="screen" id="screen-verify">
+    <div class="appbar transparent">
+      <button class="back-btn" onclick="go('screen-register')">← 返回</button>
+      <div></div>
+    </div>
+    <div class="scroll-area p20" style="padding-top:8px;">
+      <h2 style="margin-bottom:6px;">輸入驗證碼</h2>
+      <p class="caption" style="margin-bottom:28px;">已發送至 <strong>0912-XXX-XXX</strong>，請在 5 分鐘內輸入</p>
+
+      <div style="display:flex; gap:10px; margin-bottom:24px;" id="otp-boxes">
+        <input class="form-input" style="text-align:center;font-size:24px;font-weight:700;padding:12px 0;width:52px;flex:1;" maxlength="1" type="number" oninput="otpInput(this,0)">
+        <input class="form-input" style="text-align:center;font-size:24px;font-weight:700;padding:12px 0;width:52px;flex:1;" maxlength="1" type="number" oninput="otpInput(this,1)">
+        <input class="form-input" style="text-align:center;font-size:24px;font-weight:700;padding:12px 0;width:52px;flex:1;" maxlength="1" type="number" oninput="otpInput(this,2)">
+        <input class="form-input" style="text-align:center;font-size:24px;font-weight:700;padding:12px 0;width:52px;flex:1;" maxlength="1" type="number" oninput="otpInput(this,3)">
+        <input class="form-input" style="text-align:center;font-size:24px;font-weight:700;padding:12px 0;width:52px;flex:1;" maxlength="1" type="number" oninput="otpInput(this,4)">
+        <input class="form-input" style="text-align:center;font-size:24px;font-weight:700;padding:12px 0;width:52px;flex:1;" maxlength="1" type="number" oninput="otpInput(this,5)">
+      </div>
+
+      <p style="text-align:center; font-size:13px; color:var(--text-secondary); margin-bottom:24px;">
+        沒有收到？<span style="color:var(--brand);cursor:pointer;" onclick="showToast('✉️ 已重新發送驗證碼')">重新發送</span>（59秒後可再試）
+      </p>
+
+      <button class="btn btn-primary" id="otp-next-btn" disabled onclick="go('screen-step1')">
+        確認
+      </button>
+      <p style="text-align:center; margin-top:12px; font-size:13px; color:var(--text-hint);">
+        提示：輸入任意 6 個數字即可繼續
+      </p>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       SCREEN: Step 1 — 選擇縣市
+  ══════════════════════════════════════ -->
+  <div class="screen" id="screen-step1">
+    <div style="background:var(--white); padding: 52px 20px 0; border-bottom: 1px solid var(--border);">
+      <div class="row-between" style="margin-bottom:16px;">
+        <button class="back-btn" onclick="go('screen-verify')">← 返回</button>
+        <span class="caption">步驟 1 / 4</span>
+      </div>
+      <div class="progress-steps">
+        <div class="step-dot active">1</div>
+        <div class="step-line"></div>
+        <div class="step-dot pending">2</div>
+        <div class="step-line"></div>
+        <div class="step-dot pending">3</div>
+        <div class="step-line"></div>
+        <div class="step-dot pending">4</div>
+      </div>
+    </div>
+    <div class="scroll-area p20 pt16">
+      <h2 style="margin-bottom:6px;">選擇搭乘區域</h2>
+      <p class="caption" style="margin-bottom:20px;">請選擇您最常搭乘的縣市區域</p>
+
+      <div onclick="selectRegion(this,'北北基（台北、新北、基隆）','1,280')" class="radio-card" data-region="北北基">
+        <div class="radio-dot"><div class="radio-dot-inner"></div></div>
+        <div class="radio-card-content">
+          <div class="radio-card-title">北北基</div>
+          <div class="radio-card-subtitle">台北、新北、基隆</div>
+        </div>
+        <span class="radio-card-badge">NT$1,280</span>
+      </div>
+      <div onclick="selectRegion(this,'桃竹苗','1,080')" class="radio-card" data-region="桃竹苗">
+        <div class="radio-dot"><div class="radio-dot-inner"></div></div>
+        <div class="radio-card-content">
+          <div class="radio-card-title">桃竹苗</div>
+          <div class="radio-card-subtitle">桃園、新竹、苗栗</div>
+        </div>
+        <span class="radio-card-badge">NT$1,080</span>
+      </div>
+      <div onclick="selectRegion(this,'中彰投','980')" class="radio-card" data-region="中彰投">
+        <div class="radio-dot"><div class="radio-dot-inner"></div></div>
+        <div class="radio-card-content">
+          <div class="radio-card-title">中彰投</div>
+          <div class="radio-card-subtitle">台中、彰化、南投</div>
+        </div>
+        <span class="radio-card-badge">NT$980</span>
+      </div>
+      <div onclick="selectRegion(this,'高雄','880')" class="radio-card" data-region="高雄">
+        <div class="radio-dot"><div class="radio-dot-inner"></div></div>
+        <div class="radio-card-content">
+          <div class="radio-card-title">高雄</div>
+          <div class="radio-card-subtitle">高雄市全區</div>
+        </div>
+        <span class="radio-card-badge">NT$880</span>
+      </div>
+
+      <div style="background:var(--bg); border-radius:10px; padding:14px 16px; margin-top:8px; display:flex; align-items:center; gap:10px;">
+        <span style="font-size:20px;">💡</span>
+        <div>
+          <span id="region-fee-preview" class="caption">選擇縣市後顯示費用</span>
+        </div>
+      </div>
+    </div>
+    <div style="padding:16px 20px 32px; background:var(--white); border-top:1px solid var(--border);">
+      <button class="btn btn-primary" id="step1-next" disabled onclick="go('screen-step2')">下一步</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       SCREEN: Step 2 — 選擇資格
+  ══════════════════════════════════════ -->
+  <div class="screen" id="screen-step2">
+    <div style="background:var(--white); padding: 52px 20px 0; border-bottom: 1px solid var(--border);">
+      <div class="row-between" style="margin-bottom:16px;">
+        <button class="back-btn" onclick="go('screen-step1')">← 返回</button>
+        <span class="caption">步驟 2 / 4</span>
+      </div>
+      <div class="progress-steps">
+        <div class="step-dot done">✓</div>
+        <div class="step-line done"></div>
+        <div class="step-dot active">2</div>
+        <div class="step-line"></div>
+        <div class="step-dot pending">3</div>
+        <div class="step-line"></div>
+        <div class="step-dot pending">4</div>
+      </div>
+    </div>
+    <div class="scroll-area p20 pt16">
+      <h2 style="margin-bottom:6px;">選擇身份資格</h2>
+      <p class="caption" style="margin-bottom:20px;">不同資格享有不同優惠費率</p>
+
+      <div onclick="selectQual(this,'general')" class="radio-card" data-qual="general">
+        <div class="radio-dot"><div class="radio-dot-inner"></div></div>
+        <div class="radio-card-content">
+          <div class="radio-card-title">一般使用者</div>
+          <div class="radio-card-subtitle">每月 NT$1,280 / 無限次搭乘</div>
+        </div>
+      </div>
+      <div onclick="selectQual(this,'student')" class="radio-card" data-qual="student">
+        <div class="radio-dot"><div class="radio-dot-inner"></div></div>
+        <div class="radio-card-content">
+          <div class="radio-card-title">學生優惠</div>
+          <div class="radio-card-subtitle">每月 NT$800 · 需提供學生證審核</div>
+        </div>
+        <span class="chip chip-success">省 NT$480</span>
+      </div>
+      <div onclick="selectQual(this,'senior')" class="radio-card" data-qual="senior">
+        <div class="radio-dot"><div class="radio-dot-inner"></div></div>
+        <div class="radio-card-content">
+          <div class="radio-card-title">敬老 / 愛心</div>
+          <div class="radio-card-subtitle">政府補助，免月費 · 需提供相關證明</div>
+        </div>
+        <span class="chip chip-warning">免費</span>
+      </div>
+
+      <div class="notice notice-info" style="margin-top:16px;">
+        ℹ️ 資格經審核後生效，審核期間仍可正常搭乘（以一般費率計費）
+      </div>
+    </div>
+    <div style="padding:16px 20px 32px; background:var(--white); border-top:1px solid var(--border);">
+      <button class="btn btn-primary" id="step2-next" disabled onclick="nextFromStep2()">下一步</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       SCREEN: Step 2B — 學生證上傳
+  ══════════════════════════════════════ -->
+  <div class="screen" id="screen-step2b">
+    <div style="background:var(--white); padding: 52px 20px 0; border-bottom: 1px solid var(--border);">
+      <div class="row-between" style="margin-bottom:16px;">
+        <button class="back-btn" onclick="go('screen-step2')">← 返回</button>
+        <span class="caption">步驟 2 / 4</span>
+      </div>
+      <div class="progress-steps">
+        <div class="step-dot done">✓</div>
+        <div class="step-line done"></div>
+        <div class="step-dot active">2</div>
+        <div class="step-line"></div>
+        <div class="step-dot pending">3</div>
+        <div class="step-line"></div>
+        <div class="step-dot pending">4</div>
+      </div>
+    </div>
+    <div class="scroll-area p20 pt16">
+      <h2 style="margin-bottom:6px;">上傳學生證</h2>
+      <p class="caption" style="margin-bottom:20px;">請上傳清晰的學生證正面照片</p>
+
+      <div class="upload-area" id="upload-area" onclick="simulateUpload()">
+        <div class="upload-icon" id="upload-icon">📷</div>
+        <div id="upload-text" style="font-size:15px; font-weight:600; margin-bottom:4px;">點擊上傳學生證</div>
+        <div id="upload-sub" class="caption">支援 JPG、PNG，檔案小於 10MB</div>
+      </div>
+
+      <div class="gap8" style="margin-top:20px;">
+        <div class="notice notice-info">ℹ️ 預計審核時間：1–3 個工作天</div>
+        <div style="font-size:13px; color:var(--text-secondary); line-height:1.6; padding:0 4px;">
+          審核結果將透過推播通知告知，通過後學生優惠費率即日生效。
+        </div>
+      </div>
+    </div>
+    <div style="padding:16px 20px 32px; background:var(--white); border-top:1px solid var(--border);">
+      <button class="btn btn-primary" id="upload-next" disabled onclick="go('screen-step3')">送出審核</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       SCREEN: Step 3 — 綁定付款
+  ══════════════════════════════════════ -->
+  <div class="screen" id="screen-step3">
+    <div style="background:var(--white); padding: 52px 20px 0; border-bottom: 1px solid var(--border);">
+      <div class="row-between" style="margin-bottom:16px;">
+        <button class="back-btn" onclick="go('screen-step2')">← 返回</button>
+        <span class="caption">步驟 3 / 4</span>
+      </div>
+      <div class="progress-steps">
+        <div class="step-dot done">✓</div>
+        <div class="step-line done"></div>
+        <div class="step-dot done">✓</div>
+        <div class="step-line done"></div>
+        <div class="step-dot active">3</div>
+        <div class="step-line"></div>
+        <div class="step-dot pending">4</div>
+      </div>
+    </div>
+    <div class="scroll-area p20 pt16">
+      <h2 style="margin-bottom:6px;">綁定付款方式</h2>
+      <p class="caption" style="margin-bottom:20px;">每月自動扣款，免手動儲值</p>
+
+      <div onclick="selectPayment(this,'credit')" class="radio-card" data-pay="credit">
+        <div class="radio-dot"><div class="radio-dot-inner"></div></div>
+        <div class="radio-card-content">
+          <div class="radio-card-title">💳 信用卡 / 金融卡</div>
+        </div>
+      </div>
+      <div onclick="selectPayment(this,'apple')" class="radio-card" data-pay="apple">
+        <div class="radio-dot"><div class="radio-dot-inner"></div></div>
+        <div class="radio-card-content">
+          <div class="radio-card-title"> Apple Pay</div>
+        </div>
+      </div>
+      <div onclick="selectPayment(this,'line')" class="radio-card" data-pay="line">
+        <div class="radio-dot"><div class="radio-dot-inner"></div></div>
+        <div class="radio-card-content">
+          <div class="radio-card-title">💚 LINE Pay</div>
+        </div>
+      </div>
+
+      <!-- Credit card form -->
+      <div id="credit-form" style="display:none; margin-top:8px; background:var(--bg); border-radius:var(--radius-sm); padding:16px;">
+        <div class="form-group">
+          <label class="form-label">卡號</label>
+          <input class="form-input" id="card-number" placeholder="0000 0000 0000 0000" maxlength="19"
+            oninput="formatCard(this)" type="tel">
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <div class="form-group">
+            <label class="form-label">有效期限</label>
+            <input class="form-input" placeholder="MM/YY" maxlength="5" oninput="formatExpiry(this)" type="tel">
+          </div>
+          <div class="form-group">
+            <label class="form-label">CVV</label>
+            <input class="form-input" placeholder="000" maxlength="3" type="tel">
+          </div>
+        </div>
+        <div class="notice notice-info" style="margin-top:4px;">
+          🔒 卡片資訊經 SSL 加密保護
+        </div>
+      </div>
+    </div>
+    <div style="padding:16px 20px 32px; background:var(--white); border-top:1px solid var(--border);">
+      <button class="btn btn-primary" id="step3-next" disabled onclick="go('screen-step4')">確認綁定</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       SCREEN: Step 4 — 申辦完成
+  ══════════════════════════════════════ -->
+  <div class="screen" id="screen-step4" style="justify-content:center; align-items:center; padding:40px 32px; text-align:center;">
+    <div class="success-circle">✓</div>
+    <h1 style="margin-bottom:12px;">申辦成功！</h1>
+    <p style="font-size:16px; color:var(--text-secondary); line-height:1.6; margin-bottom:32px;">
+      您的 T-Pass 將於<br><strong style="color:var(--text-primary);">2026年6月1日</strong> 正式生效
+    </p>
+
+    <div class="card" style="width:100%; text-align:left; margin-bottom:24px;">
+      <div style="font-size:12px; font-weight:700; color:var(--text-hint); text-transform:uppercase; letter-spacing:1px; margin-bottom:14px;">方案摘要</div>
+      <div class="list-item" style="padding:10px 0;">
+        <span class="caption">方案</span>
+        <span style="font-size:14px; font-weight:600;">北北基一般版</span>
+      </div>
+      <div class="list-item" style="padding:10px 0;">
+        <span class="caption">每月費用</span>
+        <span style="font-size:14px; font-weight:600;">NT$1,280</span>
+      </div>
+      <div class="list-item" style="padding:10px 0;">
+        <span class="caption">生效日期</span>
+        <span style="font-size:14px; font-weight:600;">2026/06/01</span>
+      </div>
+      <div class="list-item" style="padding:10px 0; border-bottom:none;">
+        <span class="caption">付款方式</span>
+        <span style="font-size:14px; font-weight:600;">Visa ···· 4242</span>
+      </div>
+    </div>
+
+    <div style="width:100%; background:var(--brand-light); border-radius:var(--radius-sm); padding:16px; text-align:left; margin-bottom:32px;">
+      <div style="font-size:13px; font-weight:700; color:var(--brand-dark); margin-bottom:10px;">使用說明</div>
+      <div style="display:flex; flex-direction:column; gap:8px; font-size:13px; color:var(--text-secondary);">
+        <div>🎴 使用悠遊卡或手機感應搭車</div>
+        <div>📅 每月 1 日自動計費</div>
+        <div>🎁 搭乘 NT$20 以上享全額折抵</div>
+        <div>📊 App 隨時查看本月省了多少</div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" style="width:100%; font-size:17px; padding:18px;" onclick="goHome()">
+      開始使用 T-Pass
+    </button>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       SCREEN: Home
+  ══════════════════════════════════════ -->
+  <div class="screen" id="screen-home">
+    <div style="background:var(--white); padding:52px 20px 16px; border-bottom:1px solid var(--border); flex-shrink:0;">
+      <div class="row-between">
+        <div style="font-size:22px; font-weight:800; color:var(--brand);">T-Pass</div>
+        <button class="icon-btn" style="position:relative;" onclick="showToast('📭 目前沒有新通知')">
+          🔔
+          <div class="badge"></div>
+        </button>
+      </div>
+    </div>
+
+    <div class="scroll-area" style="padding-bottom:8px;">
+      <!-- Hero Card -->
+      <div style="padding:16px 20px;">
+        <div class="card-hero">
+          <div style="font-size:13px; opacity:0.85; margin-bottom:4px;">本月已省下</div>
+          <div class="amount-big" style="color:white; margin-bottom:4px;" id="home-savings">NT$340</div>
+          <div style="font-size:14px; opacity:0.85; margin-bottom:12px;">已搭 <strong>17</strong> 次 · 北北基一般版</div>
+          <div style="display:flex; align-items:center; justify-content:space-between;">
+            <div style="font-size:12px; opacity:0.75;">距本月結束還有 3 天</div>
+            <div style="font-size:12px; background:rgba(255,255,255,0.2); padding:4px 10px; border-radius:10px; opacity:0.9;">查看詳情 →</div>
+          </div>
+          <div class="progress-bar-track">
+            <div class="progress-bar-fill" style="width:87%;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div style="padding:0 20px 16px;">
+        <div style="font-size:13px; font-weight:700; color:var(--text-secondary); margin-bottom:10px; text-transform:uppercase; letter-spacing:0.5px;">快速功能</div>
+        <div class="quick-grid">
+          <button class="quick-btn" onclick="switchTab('records')">
+            <div class="quick-btn-icon">📋</div>
+            搭乘紀錄
+          </button>
+          <button class="quick-btn" onclick="switchTab('plans')">
+            <div class="quick-btn-icon">🗺️</div>
+            查路線
+          </button>
+          <button class="quick-btn" onclick="go('screen-report')">
+            <div class="quick-btn-icon">🎧</div>
+            客服
+          </button>
+        </div>
+      </div>
+
+      <!-- Recent Records -->
+      <div style="padding:0 20px;">
+        <div style="font-size:13px; font-weight:700; color:var(--text-secondary); margin-bottom:10px; text-transform:uppercase; letter-spacing:0.5px;">最近搭乘</div>
+        <div class="card" style="padding:8px 16px;">
+          <div class="record-item" onclick="showRecordDetail('捷運板南線','09:12','NT$35','免費')">
+            <div class="record-icon">🚇</div>
+            <div class="record-info">
+              <div class="record-route">捷運板南線</div>
+              <div class="record-time">今天 09:12 · 板橋 → 市政府</div>
+            </div>
+            <div class="record-amount">
+              <div class="record-original">NT$35</div>
+              <div class="record-discounted">免費</div>
+            </div>
+          </div>
+          <div class="record-item" onclick="showRecordDetail('公車 235','08:48','NT$15','免費')">
+            <div class="record-icon">🚌</div>
+            <div class="record-info">
+              <div class="record-route">公車 235</div>
+              <div class="record-time">今天 08:48 · 板橋火車站</div>
+            </div>
+            <div class="record-amount">
+              <div class="record-original">NT$15</div>
+              <div class="record-discounted">免費</div>
+            </div>
+          </div>
+          <div class="record-item" onclick="showRecordDetail('捷運文湖線','18:30','NT$25','免費')">
+            <div class="record-icon">🚇</div>
+            <div class="record-info">
+              <div class="record-route">捷運文湖線</div>
+              <div class="record-time">昨天 18:30 · 大安 → 南港展覽館</div>
+            </div>
+            <div class="record-amount">
+              <div class="record-original">NT$25</div>
+              <div class="record-discounted">免費</div>
+            </div>
+          </div>
+          <button class="btn btn-ghost" style="font-size:13px; padding:12px 0; color:var(--brand);"
+            onclick="switchTab('records')">查看全部紀錄 →</button>
+        </div>
+      </div>
+
+      <div style="height:20px;"></div>
+    </div>
+
+    <!-- Tab Bar -->
+    <div class="tab-bar">
+      <button class="tab-item active" onclick="switchTab('home')">
+        <div class="tab-icon">🏠</div>首頁
+      </button>
+      <button class="tab-item" onclick="switchTab('records')">
+        <div class="tab-icon">📋</div>搭乘紀錄
+      </button>
+      <button class="tab-item" onclick="switchTab('plans')">
+        <div class="tab-icon">🗺️</div>方案
+      </button>
+      <button class="tab-item" onclick="switchTab('account')">
+        <div class="tab-icon">👤</div>帳戶
+      </button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       SCREEN: Records
+  ══════════════════════════════════════ -->
+  <div class="screen" id="screen-records">
+    <div style="background:var(--white); padding:52px 20px 0; flex-shrink:0;">
+      <h2 style="padding-bottom:16px;">搭乘紀錄</h2>
+    </div>
+    <div class="month-switcher" style="flex-shrink:0;">
+      <button class="month-arrow" onclick="prevMonth()">‹</button>
+      <div class="month-label" id="month-label">2026年5月</div>
+      <button class="month-arrow" id="next-month-btn" onclick="nextMonth()" disabled style="opacity:0.3;">›</button>
+    </div>
+
+    <div class="scroll-area" style="padding-bottom:8px;">
+      <div style="background:var(--brand-light); padding:16px 20px; display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <div style="font-size:13px; color:var(--brand-dark); margin-bottom:4px;">本月統計</div>
+          <div style="font-size:18px; font-weight:800; color:var(--brand-dark);">搭乘 17 次 · 省 NT$340</div>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="showToast('📥 紀錄已匯出')">匯出 CSV</button>
+      </div>
+
+      <div style="padding:0 20px;">
+        <div style="padding:16px 0 6px; font-size:13px; font-weight:700; color:var(--text-secondary);">2026 / 05 / 29</div>
+        <div class="record-item" onclick="showRecordDetail('捷運板南線','09:12','NT$35','免費')">
+          <div class="record-icon">🚇</div>
+          <div class="record-info"><div class="record-route">捷運板南線</div><div class="record-time">09:12 · 板橋 → 市政府</div></div>
+          <div class="record-amount"><div class="record-original">NT$35</div><div class="record-discounted">免費</div></div>
+        </div>
+        <div class="record-item" onclick="showRecordDetail('公車 235','08:48','NT$15','免費')">
+          <div class="record-icon">🚌</div>
+          <div class="record-info"><div class="record-route">公車 235</div><div class="record-time">08:48 · 板橋火車站</div></div>
+          <div class="record-amount"><div class="record-original">NT$15</div><div class="record-discounted">免費</div></div>
+        </div>
+
+        <div style="padding:16px 0 6px; font-size:13px; font-weight:700; color:var(--text-secondary);">2026 / 05 / 28</div>
+        <div class="record-item" onclick="showRecordDetail('捷運文湖線','18:30','NT$25','免費')">
+          <div class="record-icon">🚇</div>
+          <div class="record-info"><div class="record-route">捷運文湖線</div><div class="record-time">18:30 · 大安 → 南港展覽館</div></div>
+          <div class="record-amount"><div class="record-original">NT$25</div><div class="record-discounted">免費</div></div>
+        </div>
+        <div class="record-item" onclick="showRecordDetail('捷運板南線','07:55','NT$35','免費')">
+          <div class="record-icon">🚇</div>
+          <div class="record-info"><div class="record-route">捷運板南線</div><div class="record-time">07:55 · 板橋 → 忠孝敦化</div></div>
+          <div class="record-amount"><div class="record-original">NT$35</div><div class="record-discounted">免費</div></div>
+        </div>
+
+        <div style="padding:16px 0 6px; font-size:13px; font-weight:700; color:var(--text-secondary);">2026 / 05 / 27</div>
+        <div class="record-item" onclick="showRecordDetail('公車 307','09:10','NT$20','免費')">
+          <div class="record-icon">🚌</div>
+          <div class="record-info"><div class="record-route">公車 307</div><div class="record-time">09:10 · 板橋 → 台北車站</div></div>
+          <div class="record-amount"><div class="record-original">NT$20</div><div class="record-discounted">免費</div></div>
+        </div>
+        <div class="record-item" onclick="showRecordDetail('捷運淡水信義線','18:15','NT$30','免費')">
+          <div class="record-icon">🚇</div>
+          <div class="record-info"><div class="record-route">捷運淡水信義線</div><div class="record-time">18:15 · 台北 → 大安</div></div>
+          <div class="record-amount"><div class="record-original">NT$30</div><div class="record-discounted">免費</div></div>
+        </div>
+
+        <div style="height:20px;"></div>
+      </div>
+    </div>
+
+    <div class="tab-bar">
+      <button class="tab-item" onclick="switchTab('home')"><div class="tab-icon">🏠</div>首頁</button>
+      <button class="tab-item active" onclick="switchTab('records')"><div class="tab-icon">📋</div>搭乘紀錄</button>
+      <button class="tab-item" onclick="switchTab('plans')"><div class="tab-icon">🗺️</div>方案</button>
+      <button class="tab-item" onclick="switchTab('account')"><div class="tab-icon">👤</div>帳戶</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       SCREEN: Plans
+  ══════════════════════════════════════ -->
+  <div class="screen" id="screen-plans">
+    <div style="background:var(--white); padding:52px 20px 16px; border-bottom:1px solid var(--border); flex-shrink:0;">
+      <h2>方案</h2>
+    </div>
+
+    <div class="scroll-area" style="padding-bottom:8px;">
+      <!-- My Plan -->
+      <div style="padding:16px 20px 0;">
+        <div style="font-size:13px; font-weight:700; color:var(--text-secondary); margin-bottom:10px; text-transform:uppercase; letter-spacing:0.5px;">我的方案</div>
+        <div class="plan-card current">
+          <div class="row-between" style="margin-bottom:8px;">
+            <div style="font-size:16px; font-weight:700;">北北基一般版</div>
+            <span class="chip chip-success">使用中</span>
+          </div>
+          <div class="caption" style="margin-bottom:16px;">每月 NT$1,280 · 無限次搭乘 · 下月 2026/06/01 自動續約</div>
+          <div style="display:flex; gap:8px;">
+            <button class="btn btn-secondary btn-sm" onclick="showToast('✏️ 前往變更方案')">變更方案</button>
+            <button class="btn btn-ghost btn-sm" style="color:var(--danger);" onclick="showCancelSheet()">取消訂閱</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Calculator -->
+      <div style="padding:16px 20px 0;">
+        <div style="font-size:13px; font-weight:700; color:var(--text-secondary); margin-bottom:10px; text-transform:uppercase; letter-spacing:0.5px;">費用試算器</div>
+        <div class="card">
+          <div class="calc-box">
+            <div class="calc-row">
+              <span style="font-size:14px; color:var(--text-secondary); flex:1;">每月搭乘約</span>
+              <input class="calc-input" id="calc-times" type="number" value="20" min="1" max="200" oninput="calcSavings()">
+              <span style="font-size:14px; color:var(--text-secondary);">次</span>
+            </div>
+            <div class="calc-row">
+              <span style="font-size:14px; color:var(--text-secondary); flex:1;">平均每次票價</span>
+              <span style="font-size:15px; margin-right:4px; color:var(--text-secondary);">NT$</span>
+              <input class="calc-input" id="calc-price" type="number" value="30" min="1" max="200" oninput="calcSavings()">
+            </div>
+          </div>
+          <div class="calc-result" id="calc-result">
+            預估每月省下 NT$<strong id="calc-save">320</strong>（對比原票價 NT$<span id="calc-total">600</span>）
+          </div>
+        </div>
+      </div>
+
+      <!-- Route Query -->
+      <div style="padding:16px 20px 0;">
+        <div style="font-size:13px; font-weight:700; color:var(--text-secondary); margin-bottom:10px; text-transform:uppercase; letter-spacing:0.5px;">適用路線查詢</div>
+        <div class="region-tabs" id="region-tabs">
+          <div class="region-tab active" onclick="selectRouteRegion(this,'北北基')">北北基</div>
+          <div class="region-tab" onclick="selectRouteRegion(this,'桃竹苗')">桃竹苗</div>
+          <div class="region-tab" onclick="selectRouteRegion(this,'中彰投')">中彰投</div>
+          <div class="region-tab" onclick="selectRouteRegion(this,'高雄')">高雄</div>
+          <div class="region-tab" onclick="selectRouteRegion(this,'其他')">其他</div>
+        </div>
+        <div class="card" style="padding:8px 16px;" id="route-list">
+          <div class="list-item" onclick="showToast('🚇 台北捷運全線 · 無限次搭乘')">
+            <div class="list-item-left">
+              <span style="font-size:14px; font-weight:600;">🚇 台北捷運全線</span>
+              <span class="caption">板南線、淡水信義線、中和新蘆線…等 7 條</span>
+            </div>
+            <div class="list-item-right">›</div>
+          </div>
+          <div class="list-item" onclick="showToast('🚇 新北捷運 · 環狀線全線')">
+            <div class="list-item-left">
+              <span style="font-size:14px; font-weight:600;">🚇 新北捷運環狀線</span>
+              <span class="caption">新北產業園區 ↔ 中和</span>
+            </div>
+            <div class="list-item-right">›</div>
+          </div>
+          <div class="list-item" onclick="showToast('🚌 台北市公車全線適用')">
+            <div class="list-item-left">
+              <span style="font-size:14px; font-weight:600;">🚌 台北市公車</span>
+              <span class="caption">市區路線 350 條、撥召公車全線</span>
+            </div>
+            <div class="list-item-right">›</div>
+          </div>
+          <div class="list-item" onclick="showToast('🚌 新北市公車全線適用')">
+            <div class="list-item-left">
+              <span style="font-size:14px; font-weight:600;">🚌 新北市公車</span>
+              <span class="caption">市轄路線 280 條</span>
+            </div>
+            <div class="list-item-right">›</div>
+          </div>
+          <div class="list-item" style="border-bottom:none;" onclick="showToast('🚂 基隆市公車全線適用')">
+            <div class="list-item-left">
+              <span style="font-size:14px; font-weight:600;">🚌 基隆市公車</span>
+              <span class="caption">市轄路線 45 條</span>
+            </div>
+            <div class="list-item-right">›</div>
+          </div>
+        </div>
+      </div>
+      <div style="height:20px;"></div>
+    </div>
+
+    <div class="tab-bar">
+      <button class="tab-item" onclick="switchTab('home')"><div class="tab-icon">🏠</div>首頁</button>
+      <button class="tab-item" onclick="switchTab('records')"><div class="tab-icon">📋</div>搭乘紀錄</button>
+      <button class="tab-item active" onclick="switchTab('plans')"><div class="tab-icon">🗺️</div>方案</button>
+      <button class="tab-item" onclick="switchTab('account')"><div class="tab-icon">👤</div>帳戶</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       SCREEN: Account
+  ══════════════════════════════════════ -->
+  <div class="screen" id="screen-account">
+    <div style="background:var(--white); padding:52px 20px 0; flex-shrink:0;">
+      <h2 style="padding-bottom:16px;">帳戶</h2>
+    </div>
+
+    <div class="scroll-area" style="padding-bottom:8px;">
+      <!-- Profile -->
+      <div style="background:var(--white); padding:16px 20px 20px; display:flex; align-items:center; gap:14px; border-bottom:1px solid var(--border);">
+        <div style="width:56px; height:56px; border-radius:50%; background:var(--brand-light); display:flex; align-items:center; justify-content:center; font-size:26px;">👤</div>
+        <div>
+          <div style="font-size:17px; font-weight:700;">陳大偉</div>
+          <div class="caption">0912-XXX-XXX · 北北基一般版</div>
+        </div>
+      </div>
+
+      <div style="background:var(--white); padding:0 20px; margin-top:8px;">
+        <div class="list-item" onclick="go('screen-payment')">
+          <div class="list-item-left"><span style="font-size:15px; font-weight:600;">💳 付款方式</span></div>
+          <div class="list-item-right"><span class="caption">Visa ···· 4242</span><span>›</span></div>
+        </div>
+        <div class="list-item" onclick="go('screen-notify')">
+          <div class="list-item-left"><span style="font-size:15px; font-weight:600;">🔔 通知設定</span></div>
+          <div class="list-item-right">›</div>
+        </div>
+      </div>
+
+      <div style="background:var(--white); padding:0 20px; margin-top:8px;">
+        <div class="list-item" onclick="go('screen-report')">
+          <div class="list-item-left"><span style="font-size:15px; font-weight:600;">🎧 客服 / 問題回報</span></div>
+          <div class="list-item-right">›</div>
+        </div>
+        <div class="list-item" onclick="go('screen-faq')">
+          <div class="list-item-left"><span style="font-size:15px; font-weight:600;">❓ 常見問題</span></div>
+          <div class="list-item-right">›</div>
+        </div>
+        <div class="list-item" onclick="showToast('ℹ️ 版本 2.4.1')">
+          <div class="list-item-left"><span style="font-size:15px; font-weight:600;">ℹ️ 關於 T-Pass</span></div>
+          <div class="list-item-right"><span class="caption">v2.4.1</span><span>›</span></div>
+        </div>
+      </div>
+
+      <div style="padding:20px;">
+        <button class="btn btn-danger" onclick="showToast('👋 已登出')">登出</button>
+      </div>
+    </div>
+
+    <div class="tab-bar">
+      <button class="tab-item" onclick="switchTab('home')"><div class="tab-icon">🏠</div>首頁</button>
+      <button class="tab-item" onclick="switchTab('records')"><div class="tab-icon">📋</div>搭乘紀錄</button>
+      <button class="tab-item" onclick="switchTab('plans')"><div class="tab-icon">🗺️</div>方案</button>
+      <button class="tab-item active" onclick="switchTab('account')"><div class="tab-icon">👤</div>帳戶</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       SCREEN: Payment Methods
+  ══════════════════════════════════════ -->
+  <div class="screen" id="screen-payment">
+    <div class="appbar">
+      <button class="back-btn" onclick="go('screen-account')">← 返回</button>
+      <div class="appbar-title">付款方式</div>
+      <div></div>
+    </div>
+    <div class="scroll-area p20 pt16">
+      <div class="card" style="padding:8px 16px; margin-bottom:16px;">
+        <div class="payment-item">
+          <div class="payment-icon">💳</div>
+          <div class="payment-info">
+            <div class="payment-name">Visa ···· 4242</div>
+            <div class="payment-detail">到期 08/28</div>
+          </div>
+          <span class="payment-default">預設</span>
+        </div>
+        <div class="payment-item" style="border-bottom:none;">
+          <div class="payment-icon"> </div>
+          <div class="payment-info">
+            <div class="payment-name">Apple Pay</div>
+            <div class="payment-detail">已連結</div>
+          </div>
+          <button style="background:none;border:none;color:var(--danger);font-size:13px;cursor:pointer;" onclick="showDeleteSheet()">刪除</button>
+        </div>
+      </div>
+      <button class="btn btn-secondary" onclick="showToast('➕ 前往新增付款方式')">+ 新增付款方式</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       SCREEN: Notification Settings
+  ══════════════════════════════════════ -->
+  <div class="screen" id="screen-notify">
+    <div class="appbar">
+      <button class="back-btn" onclick="go('screen-account')">← 返回</button>
+      <div class="appbar-title">通知設定</div>
+      <div></div>
+    </div>
+    <div class="scroll-area">
+      <div style="background:var(--white); padding:0 20px;">
+        <div id="notify-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       SCREEN: Report
+  ══════════════════════════════════════ -->
+  <div class="screen" id="screen-report">
+    <div class="appbar">
+      <button class="back-btn" onclick="go('screen-account')">← 返回</button>
+      <div class="appbar-title">客服 / 問題回報</div>
+      <div></div>
+    </div>
+    <div class="scroll-area p20 pt16">
+      <div class="form-group">
+        <label class="form-label">問題類型</label>
+        <select class="form-input" id="report-type">
+          <option value="">請選擇問題類型</option>
+          <option>折扣未正確套用</option>
+          <option>刷卡 / 感應失敗</option>
+          <option>帳務 / 扣款問題</option>
+          <option>學生審核問題</option>
+          <option>路線查詢問題</option>
+          <option>其他</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">問題說明</label>
+        <textarea class="form-input" rows="5" placeholder="請描述您遇到的問題（選填截圖說明）"
+          style="resize:none; font-family:inherit;"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">截圖（選填）</label>
+        <div class="upload-area" onclick="showToast('📎 已選取截圖')">
+          <div style="font-size:24px; margin-bottom:6px;">📎</div>
+          <div style="font-size:14px; font-weight:500; color:var(--text-secondary);">點擊上傳截圖</div>
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="submitReport()">送出回報</button>
+
+      <div class="divider"></div>
+      <div style="text-align:center;">
+        <div class="caption" style="margin-bottom:12px;">需要立即協助？</div>
+        <button class="btn btn-secondary" onclick="showToast('📞 客服電話：0800-000-XXX')">📞 撥打客服電話</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       SCREEN: FAQ
+  ══════════════════════════════════════ -->
+  <div class="screen" id="screen-faq">
+    <div class="appbar">
+      <button class="back-btn" onclick="go('screen-account')">← 返回</button>
+      <div class="appbar-title">常見問題</div>
+      <div></div>
+    </div>
+    <div class="scroll-area p20 pt16">
+      <div class="card" style="padding:0 16px;" id="faq-list"></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       GLOBAL: Toast
+  ══════════════════════════════════════ -->
+  <div class="toast" id="toast">
+    <span id="toast-icon">✓</span>
+    <span id="toast-text">操作成功</span>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       GLOBAL: Overlay + Bottom Sheets
+  ══════════════════════════════════════ -->
+  <div class="overlay" id="overlay" onclick="closeSheet()"></div>
+
+  <!-- Record Detail Sheet -->
+  <div class="bottom-sheet" id="sheet-record">
+    <div class="sheet-handle"></div>
+    <h3 style="margin-bottom:16px;" id="sheet-record-title">捷運板南線</h3>
+    <div class="list-item"><span class="caption">搭乘時間</span><span id="sheet-record-time" style="font-weight:600;"></span></div>
+    <div class="list-item"><span class="caption">原票價</span><span id="sheet-record-orig" style="font-weight:600;"></span></div>
+    <div class="list-item"><span class="caption">T-Pass 折抵</span><span style="font-weight:600; color:var(--brand);">全額折抵</span></div>
+    <div class="list-item" style="border-bottom:none;"><span class="caption">實付金額</span><span id="sheet-record-disc" style="font-size:18px; font-weight:800; color:var(--brand);"></span></div>
+  </div>
+
+  <!-- Cancel Plan Sheet -->
+  <div class="bottom-sheet" id="sheet-cancel">
+    <div class="sheet-handle"></div>
+    <h3 style="margin-bottom:8px;">取消訂閱</h3>
+    <p style="font-size:14px; color:var(--text-secondary); margin-bottom:20px; line-height:1.6;">
+      取消後服務將於 <strong>2026/05/31</strong> 到期，本月費用不予退還。確定要取消嗎？
+    </p>
+    <div class="notice notice-warning" style="margin-bottom:20px;">
+      ⚠️ 取消後將無法享有 T-Pass 折扣優惠
+    </div>
+    <button class="btn btn-danger" style="margin-bottom:10px;" onclick="closeSheet(); showToast('✓ 已送出取消申請，服務將於月底終止')">確認取消訂閱</button>
+    <button class="btn btn-ghost" onclick="closeSheet()">我再想想</button>
+  </div>
+
+  <!-- Delete Payment Sheet -->
+  <div class="bottom-sheet" id="sheet-delete">
+    <div class="sheet-handle"></div>
+    <h3 style="margin-bottom:8px;">刪除付款方式</h3>
+    <p style="font-size:14px; color:var(--text-secondary); margin-bottom:20px;">確定刪除 Apple Pay？此操作無法復原。</p>
+    <button class="btn btn-danger" style="margin-bottom:10px;" onclick="closeSheet(); showToast('✓ 已刪除 Apple Pay')">確認刪除</button>
+    <button class="btn btn-ghost" onclick="closeSheet()">取消</button>
+  </div>
+
+</div><!-- /.device -->
+
+<script>
+// ── State ──
+let currentScreen = 'screen-welcome';
+let selectedRegion = null;
+let selectedQual = null;
+let selectedPayment = null;
+let currentMonth = 0; // 0 = May 2026
+const months = ['2026年1月','2026年2月','2026年3月','2026年4月','2026年5月'];
+
+// ── Navigation ──
+function go(id) {
+  const from = document.getElementById(currentScreen);
+  const to   = document.getElementById(id);
+  if (!to || id === currentScreen) return;
+  from.classList.remove('active');
+  to.classList.add('active');
+  currentScreen = id;
+}
+
+function goHome() {
+  go('screen-home');
+}
+
+function switchTab(tab) {
+  const map = { home:'screen-home', records:'screen-records', plans:'screen-plans', account:'screen-account' };
+  go(map[tab]);
+}
+
+// ── Form: Phone ──
+function validatePhone(el) {
+  const v = el.value.replace(/\D/g,'');
+  const valid = v.length >= 10 && v.startsWith('09');
+  document.getElementById('phone-next-btn').disabled = !valid;
+  document.getElementById('phone-error').classList.toggle('show', el.value.length > 3 && !valid);
+}
+
+// ── Form: OTP ──
+function otpInput(el, idx) {
+  el.value = el.value.slice(-1);
+  const boxes = document.querySelectorAll('#otp-boxes input');
+  if (el.value && idx < 5) boxes[idx+1].focus();
+  const all = [...boxes].every(b => b.value.length === 1);
+  document.getElementById('otp-next-btn').disabled = !all;
+}
+
+// ── Step 1: Region ──
+function selectRegion(el, name, fee) {
+  document.querySelectorAll('#screen-step1 .radio-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedRegion = name;
+  document.getElementById('region-fee-preview').innerHTML =
+    `此方案每月 <strong style="color:var(--brand-dark)">NT$${fee}</strong> · 無限次搭乘`;
+  document.getElementById('step1-next').disabled = false;
+}
+
+// ── Step 2: Qualification ──
+function selectQual(el, qual) {
+  document.querySelectorAll('#screen-step2 .radio-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedQual = qual;
+  document.getElementById('step2-next').disabled = false;
+}
+
+function nextFromStep2() {
+  if (selectedQual === 'student') {
+    go('screen-step2b');
+  } else {
+    go('screen-step3');
+  }
+}
+
+// ── Step 2B: Upload ──
+function simulateUpload() {
+  const area = document.getElementById('upload-area');
+  const icon = document.getElementById('upload-icon');
+  const text = document.getElementById('upload-text');
+  const sub  = document.getElementById('upload-sub');
+  icon.textContent = '⏳';
+  text.textContent = '上傳中...';
+  sub.textContent = '';
+  setTimeout(() => {
+    area.classList.add('has-file');
+    icon.textContent = '✅';
+    text.textContent = '學生證已上傳';
+    sub.textContent = 'student_id.jpg · 2.3 MB';
+    document.getElementById('upload-next').disabled = false;
+  }, 1200);
+}
+
+// ── Step 3: Payment ──
+function selectPayment(el, type) {
+  document.querySelectorAll('#screen-step3 .radio-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedPayment = type;
+  document.getElementById('credit-form').style.display = (type === 'credit') ? 'block' : 'none';
+  document.getElementById('step3-next').disabled = false;
+}
+
+function formatCard(el) {
+  let v = el.value.replace(/\D/g,'').slice(0,16);
+  el.value = v.replace(/(.{4})/g,'$1 ').trim();
+}
+
+function formatExpiry(el) {
+  let v = el.value.replace(/\D/g,'').slice(0,4);
+  if (v.length >= 3) v = v.slice(0,2)+'/'+v.slice(2);
+  el.value = v;
+}
+
+// ── Records: Month ──
+function prevMonth() {
+  if (currentMonth > 0) {
+    currentMonth--;
+    document.getElementById('month-label').textContent = months[currentMonth];
+    document.getElementById('next-month-btn').disabled = false;
+    document.getElementById('next-month-btn').style.opacity = '1';
+  }
+}
+function nextMonth() {
+  if (currentMonth < months.length - 1) {
+    currentMonth++;
+    document.getElementById('month-label').textContent = months[currentMonth];
+    if (currentMonth === months.length - 1) {
+      document.getElementById('next-month-btn').disabled = true;
+      document.getElementById('next-month-btn').style.opacity = '0.3';
+    }
+  }
+}
+
+// ── Plans: Calculator ──
+function calcSavings() {
+  const times = parseInt(document.getElementById('calc-times').value) || 0;
+  const price = parseInt(document.getElementById('calc-price').value) || 0;
+  const total = times * price;
+  const save  = Math.max(0, total - 1280);
+  document.getElementById('calc-total').textContent = total.toLocaleString();
+  document.getElementById('calc-save').textContent  = save.toLocaleString();
+}
+
+// ── Plans: Route Region ──
+function selectRouteRegion(el, region) {
+  document.querySelectorAll('.region-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  const routes = {
+    '北北基': [
+      ['🚇 台北捷運全線','板南線、淡水信義線、中和新蘆線…等 7 條'],
+      ['🚇 新北捷運環狀線','新北產業園區 ↔ 中和'],
+      ['🚌 台北市公車','市區路線 350 條'],
+      ['🚌 新北市公車','市轄路線 280 條'],
+      ['🚌 基隆市公車','市轄路線 45 條'],
+    ],
+    '桃竹苗': [
+      ['🚇 桃園捷運（機場線）','機場 ↔ 台北車站'],
+      ['🚌 桃園市公車','市轄路線 200 條'],
+      ['🚌 新竹市公車','市轄路線 60 條'],
+    ],
+    '中彰投': [
+      ['🚇 台中捷運綠線','北屯 ↔ 高鐵台中站'],
+      ['🚌 台中市公車','市轄路線 160 條'],
+    ],
+    '高雄': [
+      ['🚇 高雄捷運紅線、橘線','全線適用'],
+      ['🚌 高雄市公車','市轄路線 130 條'],
+      ['🚢 高雄輕軌','全線適用'],
+    ],
+    '其他': [
+      ['🚌 台南市公車','市轄路線 80 條（部分路線）'],
+      ['🚌 嘉義市公車','市轄路線 20 條'],
+    ],
+  };
+  const list = routes[region] || [];
+  const html = list.map(([title,sub]) =>
+    `<div class="list-item" onclick="showToast('${title} 詳情')">
+      <div class="list-item-left">
+        <span style="font-size:14px;font-weight:600;">${title}</span>
+        <span class="caption">${sub}</span>
+      </div>
+      <div class="list-item-right">›</div>
+    </div>`
+  ).join('');
+  document.getElementById('route-list').innerHTML = html;
+}
+
+// ── Notification Settings ──
+const notifyItems = [
+  ['首次刷卡成功通知','刷卡成功後立即通知',true],
+  ['每月開始提醒','每月 1 日推播提醒',true],
+  ['月底倒數提醒','距月底 3 天前通知',true],
+  ['扣款結果通知','扣款成功或失敗通知',true],
+  ['學生審核結果','審核完成後通知',false],
+  ['優惠活動資訊','T-Pass 相關優惠',false],
+];
+function renderNotify() {
+  document.getElementById('notify-list').innerHTML = notifyItems.map((item, i) => `
+    <div class="list-item">
+      <div class="list-item-left">
+        <span style="font-size:15px;font-weight:600;">${item[0]}</span>
+        <span class="caption">${item[1]}</span>
+      </div>
+      <div onclick="toggleNotify(${i})" style="
+        width:48px; height:28px; border-radius:14px;
+        background:${item[2] ? 'var(--brand)' : 'var(--border)'};
+        display:flex; align-items:center; cursor:pointer;
+        padding: 2px; transition: background 200ms;
+        flex-shrink:0;
+      ">
+        <div style="
+          width:24px; height:24px; border-radius:50%; background:white;
+          transform: translateX(${item[2] ? '20px' : '0'});
+          transition: transform 200ms;
+          box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+        "></div>
+      </div>
+    </div>
+  `).join('');
+}
+function toggleNotify(i) {
+  notifyItems[i][2] = !notifyItems[i][2];
+  renderNotify();
+  showToast(notifyItems[i][2] ? `🔔 已開啟：${notifyItems[i][0]}` : `🔕 已關閉：${notifyItems[i][0]}`);
+}
+
+// ── FAQ ──
+const faqs = [
+  ['T-Pass 是什麼？','T-Pass 是交通部推出的月票方案，購買後可在指定縣市範圍內無限次搭乘公共運輸。'],
+  ['什麼時候開始計費？','每月 1 日自動從您的綁定付款方式扣款，服務效期為當月 1 日至月底。'],
+  ['折扣沒有套用怎麼辦？','請確認搭乘路線在適用範圍內，並確認 T-Pass 帳號與悠遊卡綁定正確。'],
+  ['可以更換縣市方案嗎？','可以，變更將於下月 1 日生效，本月方案不受影響。'],
+  ['如何確認學生審核進度？','可至「帳戶」→「方案資訊」查看審核狀態，或等待推播通知。'],
+  ['T-Pass 可以跨縣市使用嗎？','T-Pass 方案以購買縣市為主要適用範圍，跨縣市搭乘將以一般票價計費。'],
+];
+function renderFaq() {
+  document.getElementById('faq-list').innerHTML = faqs.map((f, i) => `
+    <div class="faq-item" onclick="toggleFaq(${i})" id="faq-${i}">
+      <div class="faq-q">${f[0]}</div>
+      <div class="faq-a">${f[1]}</div>
+    </div>
+  `).join('');
+}
+function toggleFaq(i) {
+  document.getElementById('faq-'+i).classList.toggle('open');
+}
+
+// ── Report ──
+function submitReport() {
+  const type = document.getElementById('report-type').value;
+  if (!type) { showToast('⚠️ 請選擇問題類型'); return; }
+  showToast('✅ 已送出回報，案件編號 #20260529-0042');
+  setTimeout(() => go('screen-account'), 1500);
+}
+
+// ── Bottom Sheets ──
+function showSheet(id) {
+  document.getElementById('overlay').classList.add('show');
+  document.getElementById(id).classList.add('show');
+}
+function closeSheet() {
+  document.getElementById('overlay').classList.remove('show');
+  document.querySelectorAll('.bottom-sheet').forEach(s => s.classList.remove('show'));
+}
+function showRecordDetail(route, time, orig, disc) {
+  document.getElementById('sheet-record-title').textContent = route;
+  document.getElementById('sheet-record-time').textContent  = time;
+  document.getElementById('sheet-record-orig').textContent  = orig;
+  document.getElementById('sheet-record-disc').textContent  = disc;
+  showSheet('sheet-record');
+}
+function showCancelSheet() { showSheet('sheet-cancel'); }
+function showDeleteSheet() { showSheet('sheet-delete'); }
+
+// ── Toast ──
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-text').textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ── Init ──
+renderNotify();
+renderFaq();
+calcSavings();
+</script>
+</body>
+</html>

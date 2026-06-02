@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>V2 — Split Entry</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#fff;--bg-s:#F5F5F5;--ink:#2B2B2B;--ink2:#5C5C5C;--muted:#9A9A9A;
+  --accent:#3CB371;--ac-dk:#2A9459;--ac-lt:#E8F5EE;--line:#E8E8E8;
+  --fd:'Plus Jakarta Sans','Noto Sans TC',sans-serif;
+  --fb:'Noto Sans TC','Plus Jakarta Sans',sans-serif;
+}
+body{font-family:var(--fb);background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;min-height:100vh;display:flex;flex-direction:column}
+
+/* NAV */
+nav{display:flex;align-items:center;justify-content:space-between;padding:0 60px;height:64px;border-bottom:1px solid var(--line);flex-shrink:0;background:var(--bg);z-index:10}
+.logo{font-family:var(--fd);font-weight:800;font-size:1.125rem;color:var(--ink);letter-spacing:-.01em}
+.logo span{color:var(--accent)}
+.nav-links{display:flex;gap:32px;font-size:.875rem;color:var(--ink2)}
+
+/* SPLIT HERO */
+.split{display:grid;grid-template-columns:1fr 1fr;flex:1}
+
+.panel{padding:72px 64px;display:flex;flex-direction:column;justify-content:center;position:relative}
+.panel-a{background:var(--bg);border-right:1px solid var(--line)}
+.panel-b{background:var(--ink)}
+
+/* Panel A — New User */
+.panel-tag{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:100px;font-family:var(--fd);font-size:.75rem;font-weight:600;letter-spacing:.05em;text-transform:uppercase;margin-bottom:24px}
+.tag-new{background:var(--ac-lt);color:var(--ac-dk)}
+.tag-existing{background:rgba(255,255,255,.12);color:rgba(255,255,255,.75)}
+
+.panel-a h2{font-family:var(--fd);font-size:2.75rem;font-weight:800;line-height:1.06;letter-spacing:-.022em;color:var(--ink);margin-bottom:16px}
+.panel-b h2{font-family:var(--fd);font-size:2.75rem;font-weight:800;line-height:1.06;letter-spacing:-.022em;color:#fff;margin-bottom:16px}
+
+.panel-a .desc{font-size:1rem;color:var(--ink2);line-height:1.7;margin-bottom:36px;max-width:380px}
+.panel-b .desc{font-size:1rem;color:rgba(255,255,255,.65);line-height:1.7;margin-bottom:36px;max-width:380px}
+
+.btn-a{display:inline-flex;align-items:center;gap:8px;font-family:var(--fd);font-size:1rem;font-weight:700;padding:16px 32px;border-radius:8px;background:var(--accent);color:#fff;border:none;cursor:pointer}
+.btn-b{display:inline-flex;align-items:center;gap:8px;font-family:var(--fd);font-size:1rem;font-weight:700;padding:16px 32px;border-radius:8px;background:#fff;color:var(--ink);border:none;cursor:pointer}
+
+.panel-steps{display:flex;flex-direction:column;gap:12px;margin-top:40px}
+.p-step{display:flex;align-items:center;gap:12px;font-size:.875rem}
+.p-dot{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:.6875rem;font-weight:700;flex-shrink:0}
+.dot-a{background:var(--ac-lt);color:var(--ac-dk)}
+.dot-b{background:rgba(255,255,255,.15);color:rgba(255,255,255,.8)}
+.step-text-a{color:var(--ink2)}
+.step-text-b{color:rgba(255,255,255,.6)}
+
+/* divider label */
+.split-divider{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:48px;height:48px;background:var(--bg);border:1px solid var(--line);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:.75rem;font-weight:700;color:var(--muted);z-index:5;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+
+/* BOTTOM STRIP */
+.bottom{padding:24px 60px;border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;background:var(--bg-s)}
+.bottom-text{font-size:.875rem;color:var(--muted)}
+.bottom-text strong{color:var(--ink2)}
+.bottom-links{display:flex;gap:24px;font-size:.875rem;color:var(--ink2)}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">T<span>PASS</span> <span style="font-weight:400;color:var(--muted);font-size:.875rem;margin-left:4px">通勤月票</span></div>
+  <div class="nav-links">
+    <span>方案介紹</span>
+    <span>申辦流程</span>
+    <span>常見問題</span>
+  </div>
+</nav>
+
+<div class="split" style="position:relative">
+
+  <!-- DIVIDER -->
+  <div class="split-divider">或</div>
+
+  <!-- PANEL A: NEW USER -->
+  <div class="panel panel-a">
+    <div class="panel-tag tag-new">新用戶</div>
+    <h2>還沒辦 TPASS？<br>先算你能省多少</h2>
+    <p class="desc">輸入起訖站，30 秒得到你的專屬試算結果。不需要先搞懂 1.0 和 2.0 的差別。</p>
+    <button class="btn-a">開始試算 →</button>
+
+    <div class="panel-steps">
+      <div class="p-step">
+        <div class="p-dot dot-a">1</div>
+        <span class="step-text-a">輸入你的通勤路線</span>
+      </div>
+      <div class="p-step">
+        <div class="p-dot dot-a">2</div>
+        <span class="step-text-a">告訴我們你每週搭幾天</span>
+      </div>
+      <div class="p-step">
+        <div class="p-dot dot-a">3</div>
+        <span class="step-text-a">看你每月能省多少、推薦哪個版本</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANEL B: EXISTING 1.0 USER -->
+  <div class="panel panel-b">
+    <div class="panel-tag tag-existing">已有 1.0</div>
+    <h2 style="color:#fff">想升級 2.0？<br>先看你的費用差距</h2>
+    <p class="desc">直接告訴你升了每個月多花多少、多省多少。你的現有設定不會消失。</p>
+    <button class="btn-b">查看升級試算 →</button>
+
+    <div class="panel-steps">
+      <div class="p-step">
+        <div class="p-dot dot-b">1</div>
+        <span class="step-text-b">確認你的 1.0 方案與路線</span>
+      </div>
+      <div class="p-step">
+        <div class="p-dot dot-b">2</div>
+        <span class="step-text-b">系統計算費用差距</span>
+      </div>
+      <div class="p-step">
+        <div class="p-dot dot-b">3</div>
+        <span class="step-text-b">決定要不要升——你的設定不需要重設</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="bottom">
+  <div class="bottom-text">資料更新：2026-05-01 ｜ <strong>87 萬</strong> 現有持卡用戶 ｜ 申辦費用：免費</div>
+  <div class="bottom-links">
+    <span>全家便利商店申辦</span>
+    <span>客服專線</span>
+    <span>常見問題</span>
+  </div>
+</div>
+
+</body>
+</html>
